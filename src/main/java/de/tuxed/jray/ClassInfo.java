@@ -5,46 +5,32 @@ import java.util.regex.Pattern;
 
 public class ClassInfo {
 
-	private String className = "";
+    private String className = "";
+    private String methodNames = "";
 
-	private String filename = "";
+    public boolean containsMethodWithName(String methodName) {
+        methodName = methodName.replace("*", ".*");
+        Pattern p = Pattern.compile(methodName, Pattern.MULTILINE);
+        Matcher m = p.matcher(methodNames);
+        if (m.find()) {
+            return true;
+        }
+        return false;
+    }
 
-	private String[] methodInfos = null;
+    public String getClassName() {
+        return className;
+    }
 
-	public boolean containsMethodWithName(String methodName) {
-		methodName = methodName.replace("*", ".*");
-		Pattern p = Pattern.compile(methodName);
-		Matcher m = p.matcher("");
-		for (String methodInfo : methodInfos) {
-			if (m.reset(methodInfo).find()) {
-				return true;
-			}
-		}
-		return false;
-	}
+    public void setClassName(String name) {
+        this.className = name;
+    }
 
-	public String getClassName() {
-		return className;
-	}
+    public String getMethodNames() {
+        return methodNames;
+    }
 
-	public void setClassName(String name) {
-		this.className = name;
-	}
-
-	public String getFilename() {
-		return filename;
-	}
-
-	public void setFilename(String filename) {
-		this.filename = filename;
-	}
-
-	public String[] getMethodInfos() {
-		return methodInfos;
-	}
-
-	public void setMethodInfos(String[] methodInfos) {
-		this.methodInfos = methodInfos;
-	}
-
+    public void setMethodNames(String methodNames) {
+        this.methodNames = methodNames;
+    }
 }
