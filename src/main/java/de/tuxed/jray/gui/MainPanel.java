@@ -103,7 +103,10 @@ public class MainPanel extends javax.swing.JPanel {
                 input.add((JavaClass) classList.getModel().getElementAt(i));
             }
         } else {
-            input.add((JavaClass) classList.getSelectedValue());
+            JavaClass selected = (JavaClass) classList.getSelectedValue();
+            if (selected != null) {
+                input.add(selected);
+            }
         }
 
         final List<Method> methods = new LinkedList<Method>();

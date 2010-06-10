@@ -64,7 +64,8 @@ public class Project {
         }
 
         if (matcher != null) {
-            for (Method m : ms) {
+            Set<Method> tmp = new HashSet<Method>(ms);
+            for (Method m : tmp) {
                 if (!matcher.reset(m.getName()).find()) {
                     ms.remove(m);
                 }
