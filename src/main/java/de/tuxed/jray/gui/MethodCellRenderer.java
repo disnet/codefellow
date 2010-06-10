@@ -32,6 +32,7 @@ class MethodCellRenderer extends JLabel implements ListCellRenderer {
             setForeground(list.getSelectionForeground());
         } else {
             if (!mainPanel.isMethodListFiltered()
+                    && !mainPanel.getMethodFilter().equals("")
                     && Pattern.compile(mainPanel.getMethodFilter(), Pattern.MULTILINE).matcher(m.getName()).find()) {
                 setBackground(new Color(255, 255, 190));
             } else {

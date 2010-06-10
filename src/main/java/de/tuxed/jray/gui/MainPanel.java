@@ -259,7 +259,7 @@ public class MainPanel extends javax.swing.JPanel {
         jLabel1.setText("Scope");
 
         scope.setBackground(new java.awt.Color(255, 255, 255));
-        scope.setText("-");
+        scope.setText("select libraries");
         scope.setBorder(javax.swing.BorderFactory.createEtchedBorder());
         scope.setMaximumSize(new java.awt.Dimension(9, 24));
         scope.setMinimumSize(new java.awt.Dimension(9, 24));
