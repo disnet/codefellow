@@ -26,7 +26,7 @@ public class ByteCodeDirectoryLibrary extends AbstractLibrary {
         for (File f : found) {
             String cn = f.getAbsolutePath().substring(source.getAbsolutePath().length() + 1);
             cn = createClassNameFromPath(cn);
-            ClassInfo ci;
+            ClassCache ci;
             try {
                 ci = createClassInfo(cn);
                 getClassInfoList().add(ci);

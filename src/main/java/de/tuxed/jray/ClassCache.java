@@ -3,7 +3,7 @@ package de.tuxed.jray;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class ClassInfo {
+public class ClassCache {
 
     private String className = "";
     private String methodNames = "";

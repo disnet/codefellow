@@ -26,7 +26,7 @@ public class JarFileLibrary extends AbstractLibrary {
                 }
 
                 String className = createClassNameFromPath(entry.getName());
-                ClassInfo ci = createClassInfo(className);
+                ClassCache ci = createClassInfo(className);
                 getClassInfoList().add(ci);
             }
         } catch (Throwable t) {

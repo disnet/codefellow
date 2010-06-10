@@ -19,7 +19,7 @@ public abstract class AbstractLibrary {
     private static final Matcher CLASSFILE_MATCHER = Pattern.compile(".*\\$\\d+.class$").matcher("");
     private String name;
     private String path;
-    private final List<ClassInfo> classInfoList = new ArrayList<ClassInfo>();
+    private final List<ClassCache> classInfoList = new ArrayList<ClassCache>();
     private final SyntheticRepository repository;
 
     public AbstractLibrary(SyntheticRepository repository, String[] lib) {
@@ -50,10 +50,10 @@ public abstract class AbstractLibrary {
         return true;
     }
 
-    protected ClassInfo createClassInfo(String className) throws ClassNotFoundException {
+    protected ClassCache createClassInfo(String className) throws ClassNotFoundException {
         JavaClass jc = repository.loadClass(className);
 
-        ClassInfo ci = new ClassInfo();
+        ClassCache ci = new ClassCache();
         ci.setClassName(jc.getClassName());
 
         // Create the full super class and interfaces graph
@@ -88,7 +88,7 @@ public abstract class AbstractLibrary {
         Pattern p = Pattern.compile(classQuery);
         Matcher m = p.matcher("");
 
-        for (ClassInfo ci : classInfoList) {
+        for (ClassCache ci : classInfoList) {
             if (m.reset(ci.getClassName()).find()) {
                 try {
                     if (methodQuery != null) {
@@ -114,7 +114,7 @@ public abstract class AbstractLibrary {
         return path;
     }
 
-    public List<ClassInfo> getClassInfoList() {
+    public List<ClassCache> getClassInfoList() {
         return classInfoList;
     }
 }

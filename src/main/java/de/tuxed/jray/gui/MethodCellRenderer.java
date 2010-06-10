@@ -1,5 +1,6 @@
 package de.tuxed.jray.gui;
 
+import java.awt.Color;
 import java.awt.Component;
 
 import javax.swing.JLabel;
@@ -7,10 +8,17 @@ import javax.swing.JList;
 import javax.swing.ListCellRenderer;
 
 import java.awt.Font;
+import java.util.regex.Pattern;
 import org.apache.bcel.classfile.Method;
 import org.apache.bcel.generic.Type;
 
 class MethodCellRenderer extends JLabel implements ListCellRenderer {
+
+    private final MainPanel mainPanel;
+
+    public MethodCellRenderer(MainPanel mainPanel) {
+        this.mainPanel = mainPanel;
+    }
 
     @Override
     public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
@@ -23,7 +31,12 @@ class MethodCellRenderer extends JLabel implements ListCellRenderer {
             setBackground(list.getSelectionBackground());
             setForeground(list.getSelectionForeground());
         } else {
-            setBackground(list.getBackground());
+            if (!mainPanel.isMethodListFiltered()
+                    && Pattern.compile(mainPanel.getMethodFilter(), Pattern.MULTILINE).matcher(m.getName()).find()) {
+                setBackground(new Color(255, 255, 190));
+            } else {
+                setBackground(list.getBackground());
+            }
             setForeground(list.getForeground());
         }
         setEnabled(list.isEnabled());
