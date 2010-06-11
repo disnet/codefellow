@@ -1,4 +1,4 @@
-package de.tuxed.jray;
+package de.tuxed.codefellow;
 
 import java.io.File;
 import java.util.Arrays;
@@ -44,41 +44,41 @@ public class Project {
         return result;
     }
 
-    public List<Method> getAllUniqueMethodsForJavaClass(JavaClass jc) {
+    public List<MethodInfo> getAllUniqueMethodsForJavaClass(JavaClass jc) {
         return getAllUniqueMethodsForJavaClass(jc, null);
     }
 
-    public List<Method> getAllUniqueMethodsForJavaClass(JavaClass jc, Matcher matcher) {
-        Set<Method> ms = new HashSet<Method>();
-        ms.addAll(Arrays.asList(jc.getMethods()));
+    public List<MethodInfo> getAllUniqueMethodsForJavaClass(JavaClass jc, Matcher matcher) {
+        Set<MethodInfo> ms = new HashSet<MethodInfo>();
+        ms.addAll(Arrays.asList(MethodInfo.getMethodInfosFromClass(jc)));
 
         try {
             for (JavaClass superClass : jc.getSuperClasses()) {
-                ms.addAll(Arrays.asList(superClass.getMethods()));
+                ms.addAll(Arrays.asList(MethodInfo.getMethodInfosFromClass(superClass)));
             }
             for (JavaClass superInterface : jc.getAllInterfaces()) {
-                ms.addAll(Arrays.asList(superInterface.getMethods()));
+                ms.addAll(Arrays.asList(MethodInfo.getMethodInfosFromClass(superInterface)));
             }
         } catch (Exception ex) {
             ex.printStackTrace();
         }
 
         if (matcher != null) {
-            Set<Method> tmp = new HashSet<Method>(ms);
-            for (Method m : tmp) {
-                if (!matcher.reset(m.getName()).find()) {
-                    ms.remove(m);
+            Set<MethodInfo> tmp = new HashSet<MethodInfo>(ms);
+            for (MethodInfo mi : tmp) {
+                if (!matcher.reset(mi.getMethod().getName()).find()) {
+                    ms.remove(mi);
                 }
             }
         }
 
-        List<Method> ordered = new LinkedList<Method>();
+        List<MethodInfo> ordered = new LinkedList<MethodInfo>();
         ordered.addAll(ms);
-        Collections.sort(ordered, new Comparator<Method>() {
+        Collections.sort(ordered, new Comparator<MethodInfo>() {
 
             @Override
-            public int compare(Method m1, Method m2) {
-                return m1.getName().compareTo(m2.getName());
+            public int compare(MethodInfo m1, MethodInfo m2) {
+                return m1.getMethod().getName().compareTo(m2.getMethod().getName());
             }
         });
         return ordered;

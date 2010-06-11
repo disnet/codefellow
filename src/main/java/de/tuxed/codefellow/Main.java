@@ -1,4 +1,4 @@
-package de.tuxed.jray;
+package de.tuxed.codefellow;
 
 public class Main {
 

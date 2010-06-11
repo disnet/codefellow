@@ -1,4 +1,4 @@
-package de.tuxed.jray;
+package de.tuxed.codefellow;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -19,7 +19,7 @@ public abstract class AbstractLibrary {
     private static final Matcher CLASSFILE_MATCHER = Pattern.compile(".*\\$\\d+.class$").matcher("");
     private String name;
     private String path;
-    private final List<ClassCache> classInfoList = new ArrayList<ClassCache>();
+    private final List<String[]> classInfoList = new ArrayList<String[]>();
     private final SyntheticRepository repository;
 
     public AbstractLibrary(SyntheticRepository repository, String[] lib) {
@@ -50,11 +50,11 @@ public abstract class AbstractLibrary {
         return true;
     }
 
-    protected ClassCache createClassInfo(String className) throws ClassNotFoundException {
+    protected String[] createClassInfo(String className) throws ClassNotFoundException {
         JavaClass jc = repository.loadClass(className);
+        String[] ci = new String[2];
 
-        ClassCache ci = new ClassCache();
-        ci.setClassName(jc.getClassName());
+        ci[0] = jc.getClassName();
 
         // Create the full super class and interfaces graph
         Set<JavaClass> classGraph = new HashSet<JavaClass>();
@@ -77,7 +77,7 @@ public abstract class AbstractLibrary {
         for (String m : methods) {
             sb.append(m + "\n");
         }
-        ci.setMethodNames(sb.toString());
+        ci[1] = sb.toString();
         return ci;
     }
 
@@ -88,15 +88,15 @@ public abstract class AbstractLibrary {
         Pattern p = Pattern.compile(classQuery);
         Matcher m = p.matcher("");
 
-        for (ClassCache ci : classInfoList) {
-            if (m.reset(ci.getClassName()).find()) {
+        for (String[] ci : classInfoList) {
+            if (m.reset(ci[0]).find()) {
                 try {
                     if (methodQuery != null) {
-                        if (ci.containsMethodWithName(methodQuery)) {
-                            result.add(repository.loadClass(ci.getClassName()));
+                        if (containsMethodWithName(ci[1], methodQuery)) {
+                            result.add(repository.loadClass(ci[0]));
                         }
                     } else {
-                        result.add(repository.loadClass(ci.getClassName()));
+                        result.add(repository.loadClass(ci[0]));
                     }
                 } catch (Throwable t) {
                     System.out.println(t.getMessage());
@@ -104,6 +104,16 @@ public abstract class AbstractLibrary {
             }
         }
         return result;
+    }
+
+    public boolean containsMethodWithName(String methodNamesList, String methodName) {
+        methodName = methodName.replace("*", ".*");
+        Pattern p = Pattern.compile(methodName, Pattern.MULTILINE);
+        Matcher m = p.matcher(methodNamesList);
+        if (m.find()) {
+            return true;
+        }
+        return false;
     }
 
     public String getName() {
@@ -114,7 +124,7 @@ public abstract class AbstractLibrary {
         return path;
     }
 
-    public List<ClassCache> getClassInfoList() {
+    public List<String[]> getClassInfoList() {
         return classInfoList;
     }
 }

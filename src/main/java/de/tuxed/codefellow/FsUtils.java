@@ -1,4 +1,4 @@
-package de.tuxed.jray;
+package de.tuxed.codefellow;
 
 import java.io.File;
 import java.io.FileFilter;

@@ -1,5 +1,6 @@
-package de.tuxed.jray.gui;
+package de.tuxed.codefellow.gui;
 
+import de.tuxed.codefellow.MethodInfo;
 import java.awt.Color;
 import java.awt.Component;
 
@@ -22,7 +23,7 @@ class MethodCellRenderer extends JLabel implements ListCellRenderer {
 
     @Override
     public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
-        Method m = (Method) value;
+        MethodInfo m = (MethodInfo) value;
 
         setFont(new Font("Arial", Font.PLAIN, 12));
         setText(getHtml(m));
@@ -33,7 +34,7 @@ class MethodCellRenderer extends JLabel implements ListCellRenderer {
         } else {
             if (!mainPanel.isMethodListFiltered()
                     && !mainPanel.getMethodFilter().equals("")
-                    && Pattern.compile(mainPanel.getMethodFilter(), Pattern.MULTILINE).matcher(m.getName()).find()) {
+                    && Pattern.compile(mainPanel.getMethodFilter(), Pattern.MULTILINE).matcher(m.getMethod().getName()).find()) {
                 setBackground(new Color(255, 255, 190));
             } else {
                 setBackground(list.getBackground());
@@ -45,7 +46,9 @@ class MethodCellRenderer extends JLabel implements ListCellRenderer {
         return this;
     }
 
-    private String getHtml(Method m) {
+    private String getHtml(MethodInfo mi) {
+        Method m = mi.getMethod();
+
         // Name
         String mn = m.getName();
         mn = decodeScalaMethodNames(mn);
@@ -71,7 +74,10 @@ class MethodCellRenderer extends JLabel implements ListCellRenderer {
         // Access
         //String access = Utility.accessToString(m.getAccessFlags());
 
-        return "<html>" + name + args + ": " + returnType + " </html>";
+        // Class
+        String c = "<font color='#c68200'>" + mi.getJavaClass().getClassName() + "</font>";
+
+        return "<html>" + name + args + ": " + returnType + " " + c + "</html>";
 
     }
 

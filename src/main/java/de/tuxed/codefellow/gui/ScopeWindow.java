@@ -1,4 +1,4 @@
-package de.tuxed.jray.gui;
+package de.tuxed.codefellow.gui;
 
 import java.util.List;
 import javax.swing.JTable;

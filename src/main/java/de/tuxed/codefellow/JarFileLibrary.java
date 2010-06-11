@@ -1,4 +1,4 @@
-package de.tuxed.jray;
+package de.tuxed.codefellow;
 
 import java.io.File;
 import java.util.Enumeration;
@@ -26,8 +26,7 @@ public class JarFileLibrary extends AbstractLibrary {
                 }
 
                 String className = createClassNameFromPath(entry.getName());
-                ClassCache ci = createClassInfo(className);
-                getClassInfoList().add(ci);
+                getClassInfoList().add(createClassInfo(className));
             }
         } catch (Throwable t) {
             throw new RuntimeException(t);

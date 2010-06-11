@@ -1,20 +1,20 @@
-package de.tuxed.jray.gui;
+package de.tuxed.codefellow.gui;
 
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
 import javax.swing.JFrame;
 
-public class MainWindow extends JFrame {
+public class Main extends JFrame {
 
     public static void main(String[] args) throws Exception {
-	MainWindow mw = new MainWindow();
+	Main mw = new Main();
 	mw.setVisible(true);
     }
 
-    public MainWindow() {
+    public Main() {
 	setSize(800, 700);
-	setTitle("JRay");
+	setTitle("CodeFellow");
 	setContentPane(new MainPanel());
 	addWindowListener(new WindowAdapter() {
             @Override
