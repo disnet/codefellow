@@ -25,7 +25,7 @@ class ClassInfoTreeCellRenderer implements TreeCellRenderer {
         }
         label.setEnabled(tree.isEnabled());
 
-//        label.setOpaque(true);
+        label.setOpaque(true);
         return label;
     }
 }

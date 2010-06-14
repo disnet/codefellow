@@ -24,7 +24,6 @@ import javax.swing.ImageIcon;
 import javax.swing.JTable;
 import javax.swing.ListModel;
 import org.apache.bcel.classfile.JavaClass;
-import org.apache.bcel.classfile.Method;
 
 /**
  *
@@ -111,16 +110,17 @@ public class MainPanel extends javax.swing.JPanel {
             }
         }
 
-        final List<MethodInfo> methods = new LinkedList<MethodInfo>();
+        final List<MethodInfoContainer> methods = new LinkedList<MethodInfoContainer>();
         Matcher m = null;
         if (filterMethods.getSelectedObjects() != null) {
             m = Pattern.compile(methodSearch.getText()).matcher("");
         }
 
         for (JavaClass jc : input) {
-            methods.addAll(project.getAllUniqueMethodsForJavaClass(jc, m));
+            for (MethodInfo mi : project.getAllUniqueMethodsForJavaClass(jc, m)) {
+                methods.add(new MethodInfoContainer(jc, mi));
+            }
         }
-
         ListModel model = new AbstractListModel() {
 
             @Override
@@ -137,11 +137,13 @@ public class MainPanel extends javax.swing.JPanel {
     }
 
     private void updateDetailsPanel() {
-        MethodInfo mi = (MethodInfo) methodList.getSelectedValue();
+        MethodInfoContainer mi = (MethodInfoContainer) methodList.getSelectedValue();
         if (mi == null)
             return;
+        DetailsPanel dp = new DetailsPanel(mi);
         detailsPanel.removeAll();
-        detailsPanel.add(new DetailsPanel(mi.getJavaClass()), BorderLayout.CENTER);
+        detailsPanel.add(dp, BorderLayout.CENTER);
+        detailsPanel.validate();
     }
 
     public boolean isMethodListFiltered() {

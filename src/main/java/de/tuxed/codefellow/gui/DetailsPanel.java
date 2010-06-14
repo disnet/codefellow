@@ -10,8 +10,6 @@
  */
 package de.tuxed.codefellow.gui;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeModel;
@@ -23,29 +21,27 @@ import org.apache.bcel.classfile.JavaClass;
  */
 public class DetailsPanel extends javax.swing.JPanel {
 
-    private final JavaClass javaClass;
-
     /** Creates new form DetailsPanel */
-    public DetailsPanel(JavaClass javaClass) {
-        this.javaClass = javaClass;
+    public DetailsPanel(MethodInfoContainer mic) {
         initComponents();
 
-        classHierarchy.setRootVisible(false);
-        
-        DefaultMutableTreeNode root = new DefaultMutableTreeNode();
-        addSuperTypeNodes(root, javaClass);
+        DefaultMutableTreeNode root = new DefaultMutableTreeNode(mic.getJavaClass());
+        addSuperTypeNodes(root, mic.getJavaClass());
         TreeModel model = new DefaultTreeModel(root);
         classHierarchy.setModel(model);
         classHierarchy.setCellRenderer(new ClassInfoTreeCellRenderer());
+
+//        methodList.setCellRenderer(new MethodCellRenderer(this));
+
     }
 
     private void addSuperTypeNodes(DefaultMutableTreeNode parent, JavaClass type) {
         try {
             // Superclass
             JavaClass superClass = type.getSuperClass();
-            DefaultMutableTreeNode superNode = new DefaultMutableTreeNode(superClass);
-            parent.add(superNode);
-            if (!superClass.getClassName().equals(Object.class.getName())) {
+            if (superClass != null) {
+                DefaultMutableTreeNode superNode = new DefaultMutableTreeNode(superClass);
+                parent.add(superNode);
                 addSuperTypeNodes(superNode, superClass);
             }
 
@@ -72,26 +68,38 @@ public class DetailsPanel extends javax.swing.JPanel {
 
         jScrollPane1 = new javax.swing.JScrollPane();
         classHierarchy = new javax.swing.JTree();
+        jScrollPane2 = new javax.swing.JScrollPane();
+        methodList = new javax.swing.JList();
 
         javax.swing.tree.DefaultMutableTreeNode treeNode1 = new javax.swing.tree.DefaultMutableTreeNode("root");
         classHierarchy.setModel(new javax.swing.tree.DefaultTreeModel(treeNode1));
         jScrollPane1.setViewportView(classHierarchy);
 
+        jScrollPane2.setViewportView(methodList);
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 462, Short.MAX_VALUE)
+            .addGroup(layout.createSequentialGroup()
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 280, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 264, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 167, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(223, Short.MAX_VALUE))
+                .addContainerGap())
+            .addGroup(layout.createSequentialGroup()
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 167, Short.MAX_VALUE)
+                .addGap(223, 223, 223))
         );
     }// </editor-fold>//GEN-END:initComponents
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTree classHierarchy;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JList methodList;
     // End of variables declaration//GEN-END:variables
 }
