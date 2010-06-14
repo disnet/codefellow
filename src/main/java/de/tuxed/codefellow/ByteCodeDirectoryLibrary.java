@@ -7,6 +7,8 @@ import org.apache.bcel.util.SyntheticRepository;
 
 public class ByteCodeDirectoryLibrary extends AbstractLibrary {
 
+    
+
     public ByteCodeDirectoryLibrary(SyntheticRepository repository, String[] lib) {
         super(repository, lib);
     }
@@ -21,7 +23,7 @@ public class ByteCodeDirectoryLibrary extends AbstractLibrary {
             public boolean accept(File pathname) {
                 return checkIfFileShouldBeParsed(pathname.getAbsolutePath());
             }
-        });
+        }, null);
 
         for (File f : found) {
             String cn = f.getAbsolutePath().substring(source.getAbsolutePath().length() + 1);

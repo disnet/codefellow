@@ -31,7 +31,7 @@ public class DetailsPanel extends javax.swing.JPanel {
         classHierarchy.setModel(model);
         classHierarchy.setCellRenderer(new ClassInfoTreeCellRenderer());
 
-//        methodList.setCellRenderer(new MethodCellRenderer(this));
+        methodList.setCellRenderer(new MethodCellRenderer(this));
 
     }
 
@@ -73,6 +73,11 @@ public class DetailsPanel extends javax.swing.JPanel {
 
         javax.swing.tree.DefaultMutableTreeNode treeNode1 = new javax.swing.tree.DefaultMutableTreeNode("root");
         classHierarchy.setModel(new javax.swing.tree.DefaultTreeModel(treeNode1));
+        classHierarchy.addTreeSelectionListener(new javax.swing.event.TreeSelectionListener() {
+            public void valueChanged(javax.swing.event.TreeSelectionEvent evt) {
+                classHierarchyValueChanged(evt);
+            }
+        });
         jScrollPane1.setViewportView(classHierarchy);
 
         jScrollPane2.setViewportView(methodList);
@@ -82,20 +87,29 @@ public class DetailsPanel extends javax.swing.JPanel {
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 280, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 349, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 264, Short.MAX_VALUE))
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 420, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 167, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap())
-            .addGroup(layout.createSequentialGroup()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 167, Short.MAX_VALUE)
-                .addGap(223, 223, 223))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                    .addComponent(jScrollPane2, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 205, Short.MAX_VALUE)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 205, Short.MAX_VALUE))
+                .addGap(410, 410, 410))
         );
     }// </editor-fold>//GEN-END:initComponents
+
+    private void classHierarchyValueChanged(javax.swing.event.TreeSelectionEvent evt) {//GEN-FIRST:event_classHierarchyValueChanged
+        System.out.println("class hierarchy value changed");
+
+        methodInfoContainer.getMethodInfo().
+
+
+
+    }//GEN-LAST:event_classHierarchyValueChanged
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTree classHierarchy;
     private javax.swing.JScrollPane jScrollPane1;

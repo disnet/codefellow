@@ -11,6 +11,14 @@ import java.util.regex.Pattern;
 
 public class FsUtils {
 
+    private static FileFilter SKIP_DIR_FILE_FILTER = new FileFilter() {
+
+        @Override
+        public boolean accept(File pathname) {
+            return pathname.isDirectory() && pathname.getName().equals("src");
+        }
+    };
+
     public static List<String[]> getAllUniqueJarFiles(String rootDirectory) {
         Set<String> fileNames = new HashSet<String>();
         List<File> tmp = new LinkedList<File>();
@@ -22,7 +30,7 @@ public class FsUtils {
             public boolean accept(File f) {
                 return f.getAbsolutePath().endsWith(".jar");
             }
-        });
+        }, null);
 
         for (File f : tmp) {
             if (!fileNames.contains(f.getName())) {
@@ -55,7 +63,7 @@ public class FsUtils {
 
                 return false;
             }
-        });
+        }, SKIP_DIR_FILE_FILTER);
 
         for (File f : tmp) {
             matcher.reset(f.getAbsolutePath()).find();
@@ -65,13 +73,15 @@ public class FsUtils {
         return result;
     }
 
-    public static void findRecursively(String rootDirectory, List<File> collected, FileFilter filter) {
+    public static void findRecursively(String rootDirectory, List<File> collected, FileFilter filter, FileFilter skipDirectory) {
         File root = new File(rootDirectory);
         for (File entry : root.listFiles()) {
             if (filter.accept(entry)) {
                 collected.add(entry);
             } else if (entry.isDirectory()) {
-                findRecursively(entry.getAbsolutePath(), collected, filter);
+                if (skipDirectory == null || !skipDirectory.accept(entry)) {
+                    findRecursively(entry.getAbsolutePath(), collected, filter, skipDirectory);
+                }
             }
         }
     }

@@ -47,10 +47,9 @@ class ClassInfoLabel extends JLabel {
 
 
 
-        // TODO
-
         // Package
         String pn = jc.getClassName().substring(0, jc.getClassName().lastIndexOf("."));
+        pn = "<font color='#c68200'>" + pn + "</font>";
 
         return "<html>" + cn + " " + pn + "</html>";
     }

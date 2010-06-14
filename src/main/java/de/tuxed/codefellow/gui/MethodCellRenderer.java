@@ -1,17 +1,12 @@
 package de.tuxed.codefellow.gui;
 
-import de.tuxed.codefellow.MethodInfo;
 import java.awt.Color;
 import java.awt.Component;
 
-import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.ListCellRenderer;
 
-import java.awt.Font;
 import java.util.regex.Pattern;
-import org.apache.bcel.classfile.Method;
-import org.apache.bcel.generic.Type;
 
 class MethodCellRenderer implements ListCellRenderer {
 
