@@ -5,8 +5,8 @@
 
     <groupId>de.tuxed</groupId>
     <version>1.0.1</version>
-    <artifactId>jray</artifactId>
-    <name>JRay</name>
+    <artifactId>codefellow</artifactId>
+    <name>CodeFellow</name>
 
     <dependencies>
         <dependency>
