@@ -36,8 +36,7 @@ public class MainPanel extends javax.swing.JPanel {
     private static final ImageIcon ICON_LIBRARY = new ImageIcon(ClassInfoListCellRenderer.class.getResource("icon_library.png"));
     private Project project = null;
     private final ScopeWindow scopeWindow;
-    private String classPathString = ".";
-
+    private final String classPathString;
     private JavaClass javaClassInDetailsPanel = null;
 
     /** Creates new form MainPanel */
@@ -57,9 +56,11 @@ public class MainPanel extends javax.swing.JPanel {
 
         this.scopeWindow = new ScopeWindow(this, libraries);
 
+        String tmp = ".";
         for (String[] lib : libraries) {
-            classPathString += ":" + lib[1];
+            tmp += ":" + lib[1];
         }
+        classPathString = tmp;
     }
 
     public void updateProject() {
@@ -71,7 +72,8 @@ public class MainPanel extends javax.swing.JPanel {
             if (selected) {
                 active.add(new String[]{
                             (String) table.getModel().getValueAt(i, 1),
-                            (String) table.getModel().getValueAt(i, 2)});
+                            (String) table.getModel().getValueAt(i, 2)
+                        });
             }
         }
         this.scope.setText(active.size() + " / " + table.getModel().getRowCount());
@@ -139,9 +141,10 @@ public class MainPanel extends javax.swing.JPanel {
     }
 
     private void updateDetailsPanel(JavaClass javaClass) {
-        if (javaClassInDetailsPanel != null && javaClass.equals(javaClassInDetailsPanel))
+        if (javaClassInDetailsPanel != null && javaClass.equals(javaClassInDetailsPanel)) {
             return;
-        
+        }
+
         DetailsPanel dp = new DetailsPanel(this, javaClass);
         detailsPanel.removeAll();
         detailsPanel.add(dp, BorderLayout.CENTER);
