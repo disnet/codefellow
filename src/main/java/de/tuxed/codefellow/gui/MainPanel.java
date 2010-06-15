@@ -34,9 +34,13 @@ public class MainPanel extends javax.swing.JPanel {
     private static final ImageIcon ICON_FROMALL = new ImageIcon(ClassInfoListCellRenderer.class.getResource("icon_fromall.png"));
     private static final ImageIcon ICON_FILTER = new ImageIcon(ClassInfoListCellRenderer.class.getResource("icon_filter.png"));
     private static final ImageIcon ICON_LIBRARY = new ImageIcon(ClassInfoListCellRenderer.class.getResource("icon_library.png"));
+
     private Project project = null;
+
     private final ScopeWindow scopeWindow;
+
     private final String classPathString;
+
     private JavaClass javaClassInDetailsPanel = null;
 
     /** Creates new form MainPanel */
@@ -141,15 +145,15 @@ public class MainPanel extends javax.swing.JPanel {
     }
 
     private void updateDetailsPanel(JavaClass javaClass) {
-        if (javaClassInDetailsPanel != null && javaClass.equals(javaClassInDetailsPanel)) {
-            return;
-        }
-
-        DetailsPanel dp = new DetailsPanel(this, javaClass);
-        detailsPanel.removeAll();
-        detailsPanel.add(dp, BorderLayout.CENTER);
-        detailsPanel.validate();
-        javaClassInDetailsPanel = javaClass;
+//        if (javaClassInDetailsPanel != null && javaClass.equals(javaClassInDetailsPanel)) {
+//            return;
+//        }
+//
+//        DetailsPanel dp = new DetailsPanel(this, javaClass);
+//        detailsPanel.removeAll();
+//        detailsPanel.add(dp, BorderLayout.CENTER);
+//        detailsPanel.validate();
+//        javaClassInDetailsPanel = javaClass;
     }
 
     public boolean isMethodListFiltered() {
