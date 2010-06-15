@@ -35,12 +35,12 @@ public class Project {
     }
 
     public List<JavaClass> query(String classQuery, String methodQuery) {
-        List<JavaClass> result = new LinkedList<JavaClass>();
+        Set<JavaClass> result = new HashSet<JavaClass>();
         for (AbstractLibrary l : libraries) {
             List<JavaClass> queryClasses = l.query(classQuery, methodQuery);
             result.addAll(queryClasses);
         }
-        return result;
+        return new LinkedList(result);
     }
 
     public List<MethodInfo> getAllUniqueMethodsForJavaClass(JavaClass jc) {
