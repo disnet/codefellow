@@ -1,5 +1,6 @@
 package de.tuxed.codefellow.gui;
 
+import de.tuxed.codefellow.MethodInfo;
 import java.awt.Color;
 import java.awt.Component;
 
@@ -18,8 +19,8 @@ class MethodCellRenderer implements ListCellRenderer {
 
     @Override
     public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
-        MethodInfoContainer m = (MethodInfoContainer) value;
-        MethodInfoLabel label = new MethodInfoLabel(m.getMethodInfo());
+        MethodInfo m = (MethodInfo) value;
+        MethodInfoLabel label = new MethodInfoLabel(m);
 
         if (isSelected) {
             label.setBackground(list.getSelectionBackground());
@@ -27,7 +28,7 @@ class MethodCellRenderer implements ListCellRenderer {
         } else {
             if (!mainPanel.isMethodListFiltered()
                     && !mainPanel.getMethodFilter().equals("")
-                    && Pattern.compile(mainPanel.getMethodFilter(), Pattern.MULTILINE).matcher(m.getMethodInfo().getMethod().getName()).find()) {
+                    && Pattern.compile(mainPanel.getMethodFilter(), Pattern.MULTILINE).matcher(m.getMethod().getName()).find()) {
                 label.setBackground(new Color(255, 255, 190));
             } else {
                 label.setBackground(list.getBackground());

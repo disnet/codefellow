@@ -38,6 +38,8 @@ public class MainPanel extends javax.swing.JPanel {
     private final ScopeWindow scopeWindow;
     private String classPathString = ".";
 
+    private JavaClass javaClassInDetailsPanel = null;
+
     /** Creates new form MainPanel */
     public MainPanel() {
         initComponents();
@@ -110,7 +112,7 @@ public class MainPanel extends javax.swing.JPanel {
             }
         }
 
-        final List<MethodInfoContainer> methods = new LinkedList<MethodInfoContainer>();
+        final List<MethodInfo> methods = new LinkedList<MethodInfo>();
         Matcher m = null;
         if (filterMethods.getSelectedObjects() != null) {
             m = Pattern.compile(methodSearch.getText()).matcher("");
@@ -118,7 +120,7 @@ public class MainPanel extends javax.swing.JPanel {
 
         for (JavaClass jc : input) {
             for (MethodInfo mi : project.getAllUniqueMethodsForJavaClass(jc, m)) {
-                methods.add(new MethodInfoContainer(jc, mi));
+                methods.add(mi);
             }
         }
         ListModel model = new AbstractListModel() {
@@ -136,14 +138,15 @@ public class MainPanel extends javax.swing.JPanel {
         methodList.setModel(model);
     }
 
-    private void updateDetailsPanel() {
-        MethodInfoContainer mi = (MethodInfoContainer) methodList.getSelectedValue();
-        if (mi == null)
+    private void updateDetailsPanel(JavaClass javaClass) {
+        if (javaClassInDetailsPanel != null && javaClass.equals(javaClassInDetailsPanel))
             return;
-        DetailsPanel dp = new DetailsPanel(mi);
+        
+        DetailsPanel dp = new DetailsPanel(this, javaClass);
         detailsPanel.removeAll();
         detailsPanel.add(dp, BorderLayout.CENTER);
         detailsPanel.validate();
+        javaClassInDetailsPanel = javaClass;
     }
 
     public boolean isMethodListFiltered() {
@@ -152,6 +155,10 @@ public class MainPanel extends javax.swing.JPanel {
 
     public String getMethodFilter() {
         return methodSearch.getText();
+    }
+
+    public Project getProject() {
+        return project;
     }
 
     /** This method is called from within the constructor to
@@ -396,6 +403,9 @@ public class MainPanel extends javax.swing.JPanel {
     }//GEN-LAST:event_methodSearchKeyPressed
 
     private void classListValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_classListValueChanged
+        if (classList.getSelectedValue() != null) {
+            updateDetailsPanel((JavaClass) classList.getSelectedValue());
+        }
         updateMethodList();
     }//GEN-LAST:event_classListValueChanged
 
@@ -412,8 +422,19 @@ public class MainPanel extends javax.swing.JPanel {
     }//GEN-LAST:event_filterMethodsActionPerformed
 
     private void methodListValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_methodListValueChanged
-        System.out.println("method list value changed");
-        updateDetailsPanel();
+        JavaClass jc = null;
+        if (showMethodsFromAllClasses.getSelectedObjects() == null) {
+            if (classList.getSelectedValue() != null) {
+                jc = (JavaClass) classList.getSelectedValue();
+            }
+        } else {
+            if (methodList.getSelectedValue() != null) {
+                jc = ((MethodInfo) methodList.getSelectedValue()).getJavaClass();
+            }
+        }
+        if (jc != null) {
+            updateDetailsPanel(jc);
+        }
     }//GEN-LAST:event_methodListValueChanged
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JList classList;

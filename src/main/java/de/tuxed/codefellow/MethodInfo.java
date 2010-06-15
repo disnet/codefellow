@@ -9,7 +9,7 @@ import org.apache.bcel.classfile.Method;
  */
 public class MethodInfo {
     
-    public static MethodInfo[] getMethodInfosFromClass(JavaClass javaClass) {
+    public static MethodInfo[] createAllMethodInfosFromClass(JavaClass javaClass) {
         MethodInfo[] result = new MethodInfo[javaClass.getMethods().length];
         for (int i = 0; i < result.length; i++) {
             Method m = javaClass.getMethods()[i];

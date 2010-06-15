@@ -13,7 +13,7 @@ public class Main extends JFrame {
     }
 
     public Main() {
-	setSize(1000, 800);
+	setSize(1000, 700);
 	setTitle("CodeFellow");
 	setContentPane(new MainPanel());
 	addWindowListener(new WindowAdapter() {

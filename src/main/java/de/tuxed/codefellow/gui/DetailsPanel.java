@@ -10,6 +10,9 @@
  */
 package de.tuxed.codefellow.gui;
 
+import de.tuxed.codefellow.MethodInfo;
+import javax.swing.AbstractListModel;
+import javax.swing.ListModel;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeModel;
@@ -20,19 +23,17 @@ import org.apache.bcel.classfile.JavaClass;
  * @author roman
  */
 public class DetailsPanel extends javax.swing.JPanel {
-
+    
     /** Creates new form DetailsPanel */
-    public DetailsPanel(MethodInfoContainer mic) {
+    public DetailsPanel(MainPanel mainPanel, JavaClass javaClass) {
         initComponents();
 
-        DefaultMutableTreeNode root = new DefaultMutableTreeNode(mic.getJavaClass());
-        addSuperTypeNodes(root, mic.getJavaClass());
+        DefaultMutableTreeNode root = new DefaultMutableTreeNode(javaClass);
+        addSuperTypeNodes(root, javaClass);
         TreeModel model = new DefaultTreeModel(root);
         classHierarchy.setModel(model);
         classHierarchy.setCellRenderer(new ClassInfoTreeCellRenderer());
-
-        methodList.setCellRenderer(new MethodCellRenderer(this));
-
+        methodList.setCellRenderer(new MethodCellRenderer(mainPanel));
     }
 
     private void addSuperTypeNodes(DefaultMutableTreeNode parent, JavaClass type) {
@@ -50,7 +51,7 @@ public class DetailsPanel extends javax.swing.JPanel {
             for (JavaClass ic : type.getInterfaces()) {
                 interfaceNode = new DefaultMutableTreeNode(ic);
                 parent.add(interfaceNode);
-//                addSuperTypeNodes(interfaceNode, ic);
+                addSuperTypeNodes(interfaceNode, ic);
             }
         } catch (ClassNotFoundException ex) {
             ex.printStackTrace();
@@ -87,29 +88,38 @@ public class DetailsPanel extends javax.swing.JPanel {
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 349, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 271, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 420, Short.MAX_VALUE))
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 498, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                    .addComponent(jScrollPane2, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 205, Short.MAX_VALUE)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 205, Short.MAX_VALUE))
-                .addGap(410, 410, 410))
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.LEADING, 0, 0, Short.MAX_VALUE)
+                    .addComponent(jScrollPane2, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 205, Short.MAX_VALUE))
+                .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
 
     private void classHierarchyValueChanged(javax.swing.event.TreeSelectionEvent evt) {//GEN-FIRST:event_classHierarchyValueChanged
-        System.out.println("class hierarchy value changed");
+       DefaultMutableTreeNode node = (DefaultMutableTreeNode) classHierarchy.getSelectionPath().getLastPathComponent();
+       JavaClass jc = (JavaClass) node.getUserObject();
+        final MethodInfo[] methods = MethodInfo.createAllMethodInfosFromClass(jc);
+        ListModel model = new AbstractListModel() {
 
-        methodInfoContainer.getMethodInfo().
+            @Override
+            public int getSize() {
+                return methods.length;
+            }
 
-
-
+            @Override
+            public Object getElementAt(int index) {
+                return methods[index];
+            }
+        };
+        methodList.setModel(model);
     }//GEN-LAST:event_classHierarchyValueChanged
-
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTree classHierarchy;
     private javax.swing.JScrollPane jScrollPane1;

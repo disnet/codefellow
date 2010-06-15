@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 import org.apache.bcel.classfile.JavaClass;
-import org.apache.bcel.classfile.Method;
 
 import org.apache.bcel.util.ClassPath;
 import org.apache.bcel.util.SyntheticRepository;
@@ -50,14 +49,14 @@ public class Project {
 
     public List<MethodInfo> getAllUniqueMethodsForJavaClass(JavaClass jc, Matcher matcher) {
         Set<MethodInfo> ms = new HashSet<MethodInfo>();
-        ms.addAll(Arrays.asList(MethodInfo.getMethodInfosFromClass(jc)));
+        ms.addAll(Arrays.asList(MethodInfo.createAllMethodInfosFromClass(jc)));
 
         try {
             for (JavaClass superClass : jc.getSuperClasses()) {
-                ms.addAll(Arrays.asList(MethodInfo.getMethodInfosFromClass(superClass)));
+                ms.addAll(Arrays.asList(MethodInfo.createAllMethodInfosFromClass(superClass)));
             }
             for (JavaClass superInterface : jc.getAllInterfaces()) {
-                ms.addAll(Arrays.asList(MethodInfo.getMethodInfosFromClass(superInterface)));
+                ms.addAll(Arrays.asList(MethodInfo.createAllMethodInfosFromClass(superInterface)));
             }
         } catch (Exception ex) {
             ex.printStackTrace();
