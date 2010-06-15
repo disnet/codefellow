@@ -15,7 +15,11 @@ public class FsUtils {
 
         @Override
         public boolean accept(File pathname) {
-            return pathname.isDirectory() && pathname.getName().equals("src");
+            boolean skip = pathname.isDirectory() && pathname.getName().equals("src");
+            if (skip) {
+                System.out.println("SKIPPING " + pathname);
+            }
+            return skip;
         }
     };
 
