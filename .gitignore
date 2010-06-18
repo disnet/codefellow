@@ -1,6 +1,13 @@
 target
-project/boot
-project/build/target
+
+*project/boot
+*/project/boot
+*project/build/target
+*/project/build/target
+
+lib_managed
+src_managed
+
 .project
 .classpath
 .settings
