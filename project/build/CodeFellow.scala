@@ -8,12 +8,10 @@ class CodeFellowParentProject(info: ProjectInfo) extends ParentProject(info) {
 
   class CodeFellowCoreProject(info: ProjectInfo) extends DefaultProject(info) {
     val bcel = "org.apache.bcel" % "bcel" % "5.2"
-    override def managedStyle = ManagedStyle.Maven
   }
 
   class CodeFellowPluginProject(info: ProjectInfo) extends PluginProject(info) {
-    val core = "de.tuxed" % "codefellow-core" % "1.0"
-    override def managedStyle = ManagedStyle.Maven
+    //import Configurations.{Compile, CompilerPlugin, Default, Provided, Runtime, Test}
   }
 
 }
