@@ -1,4 +1,6 @@
 target
+project/boot
+project/build/target
 .project
 .classpath
 .settings
@@ -6,14 +8,4 @@ target
 .launch
 .svn
 .DS_Store
-reference/output/*.aux
-reference/output/*.log
-reference/output/*.out
-*.tex~
-*.tex.backup
-*.swp
-.scala_dependencies
-*.iml
-*.ipr
-*.iws
 .scala_dependencies
