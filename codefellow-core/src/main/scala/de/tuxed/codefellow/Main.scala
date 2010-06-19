@@ -12,14 +12,16 @@ object Launch {
   def main(args: Array[String]) {
     val root = if (args.size > 0) args(0) else "."
     val modules = findAllModules(root)
-    //modules.foreach {m =>
-      //m.start
-      //m ! StartCompiler
-    //}
+    
+    val registry = new ModuleRegistry(modules)
+    registry.start
 
-    modules(0).start
-    modules(0) ! StartCompiler
-    modules(0) ! GetTypeAt("/home/roman/Dateien/Projekte/workspace/codefellow/testproject/project2/src/main/scala/Project2.scala", 151)
+    //modules(0).start
+    //modules(0) ! StartCompiler
+    //modules(0) ! GetTypeAt("/home/roman/Dateien/Projekte/workspace/codefellow/testproject/project2/src/main/scala/Project2.scala", 134)
+    //modules(0) ! CompleteScope("/home/roman/Dateien/Projekte/workspace/codefellow/testproject/project2/src/main/scala/Project2.scala", 147)
+    //modules(0) ! CompleteType("/home/roman/Dateien/Projekte/workspace/codefellow/testproject/project2/src/main/scala/Project2.scala", 139, "")
+    //modules(0) ! Shutdown
   }
 
   def findAllModules(rootPath: String): List[Module] = {
@@ -31,21 +33,20 @@ object Launch {
     val handler: (File => Unit) = { dir =>
       val config = new File(dir.getAbsolutePath + "/" + ".codefellow")
       if (config.exists) {
-        println("ADDING PROJECT:" + config.getAbsolutePath)
-        collected += parseModule(config)
+        collected += parseModule(dir.getAbsolutePath, config)
       }
     }
     Utils.traverseDirectory(rootPath, filter, handler)
     collected.toList
   }
 
-  def parseModule(config: File): Module = {
+  def parseModule(moduleDir: String, config: File): Module = {
     val input = new Scanner(config)
     val name = input.nextLine
     val sources = input.nextLine.split(":")
     val classpath = input.nextLine.split(":")
     input.close
-    new Module(name, sources, classpath)
+    new Module(name, new File(moduleDir).getCanonicalPath, sources, classpath)
   }
 
 }
