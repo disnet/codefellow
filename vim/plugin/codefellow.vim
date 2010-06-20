@@ -12,6 +12,9 @@ let s:codefellowpath =  s:vimhomepath[0] . "/codefellow/"
 
 
 autocmd FileType scala set omnifunc=CodeFellowComplete
+autocmd FileType scala set ballooneval
+autocmd FileType scala set balloondelay=300
+autocmd FileType scala set balloonexpr=CodeFellowBalloonType()
 
 " TODO: Need to do this in the background
 "autocmd BufWritePost *.scala call <SID>ReloadFile(expand("%:p"))
@@ -77,5 +80,19 @@ endfunction
 "function s:ReloadFile(file)
     "call <SID>RunClient("ReloadFile", a:file)
 "endfunction
+
+
+function CodeFellowBalloonType()
+    let index = v:beval_col
+    for l in getline(1, v:beval_lnum - 1)
+        let index += len(l)
+    endfor
+
+    let result = <SID>RunClient("TypeInfo", expand("%:p"), index)
+    return result
+endfunction
+
+
+
 
 

@@ -32,17 +32,16 @@ class ModuleRegistry(modules: List[Module]) extends Actor {
         receive {
           case Request(moduleIdentifierFile :: args) =>
             val module = modules.filter(m => moduleIdentifierFile.startsWith(m.path))(0)
-            module !! StartCompiler
             val message = createMessage(args)
             println("REQUEST: Sending " + message + " to " + module + "")
             val result = module !? message
-            println("REQUEST done")
+            println("REQUEST result:" + result)
             sender ! result
         }
       } catch {
         case e: Exception =>
           e.printStackTrace
-          sender ! ""
+          sender ! List("")
       }
     }
   }
@@ -70,7 +69,7 @@ case object ReloadAllFiles
 case class ReloadFile(file: String)
 case class CompleteMember(file: String, pos: Int, prefix: String)
 case class CompleteScope(file: String, pos: Int, prefix: String)
-case class GetTypeAt(file: String, pos: Int, prefix: String)
+case class TypeInfo(file: String, pos: Int)
 
 class Module(val name: String, val path: String, scalaSourceDirs: Seq[String], classpath: Seq[String]) extends Actor {
     
@@ -104,15 +103,16 @@ class Module(val name: String, val path: String, scalaSourceDirs: Seq[String], c
     case CompleteScope(file, pos, prefix) =>
       sender ! compiler.completeScope(file, pos, prefix)
 
-    //case GetTypeAt(file, pos, prefix) =>
-      //sender ! compiler.getTypeAt(file, pos, prefix)
+    case TypeInfo(file, pos) =>
+      sender ! compiler.typeInfo(file, pos)
   }
 
   val block: PartialFunction[Any, Any] = {
     case message: Any => {
-      if (compiler != null)
+      if (compiler != null) {
         compiler.blockWhileActive
-        message
+      }
+      message
     }
   }
 
@@ -235,8 +235,8 @@ class InteractiveCompiler(settings: Settings, reporter: PresentationReporter) ex
     filtered.map {case ScopeMember(sym, tpe, true, viaImport) => sym.nameString}
   }
 
-  def getTypeAt(file: String, cursor: Int) = {
-    println("COMPILER: type at")
+  def typeInfo(file: String, cursor: Int) = {
+    println("COMPILER: typeinfo")
     val x = new Response[Tree]()
     val p = new OffsetPosition(getSourceFile(file), cursor)
 
@@ -244,20 +244,20 @@ class InteractiveCompiler(settings: Settings, reporter: PresentationReporter) ex
     //println(x.get)
 
     askTypeAt(p, x)
-    x.get match {
+    val result = x.get match {
       case Left(tree) =>
-        println("TYPE:" + typeOfTree(tree))
+        typeOfTree(tree)
 
       case Right(e:FatalError) =>
-        println("FATAL ERROR:" + e)
+        "FATAL ERROR"
 
       case Right(e) =>
-        println("UNKNOWN:" + e)
-
+        "UNKNOWN"
     }
+    List(result)
   }
 
-  private def typeOfTree(t:Tree):Either[Type, Throwable] = {
+  private def typeOfTree(t:Tree): String = {
     var tree = t
     println("Class of tree: " + tree.getClass)
     tree = tree match {
@@ -280,10 +280,9 @@ class InteractiveCompiler(settings: Settings, reporter: PresentationReporter) ex
       case t => t
     }
     if(tree.tpe != null) {
-      Left(tree.tpe)
-    }
-    else {
-      Right(new Exception("Null tpe"))
+      tree.tpe.toString
+    } else {
+      "UNKNOWN"
     }
   }
 
