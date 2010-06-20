@@ -13,8 +13,11 @@ object Client {
     val node = new Node("localhost", 9051)
     val registry = RemoteActor.select(node, 'ModuleRegistry)
     val result = registry !? Request(args.toList)
-    println(result.asInstanceOf[Seq[String]].mkString("\n"))
-    System.exit(0)
+    try {
+      println(result.asInstanceOf[Seq[String]].mkString("\n"))
+    } finally { 
+      System.exit(0)
+    }
   }
 
 }

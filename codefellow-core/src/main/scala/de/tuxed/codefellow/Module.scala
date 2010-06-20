@@ -24,7 +24,7 @@ case class Request(args: List[String])
 class ModuleRegistry(modules: List[Module]) extends Actor {
   def act {
     modules.foreach(_.start)
-    modules.foreach(_ ! StartCompiler) // TODO: May better defer
+    modules.foreach(_ ! StartCompiler) // TODO: Defer to improve startup time?
     RemoteActor.alive(9051)
     RemoteActor.register('ModuleRegistry, self)
     loop {
@@ -34,7 +34,9 @@ class ModuleRegistry(modules: List[Module]) extends Actor {
             val module = modules.filter(m => moduleIdentifierFile.startsWith(m.path))(0)
             module !! StartCompiler
             val message = createMessage(args)
+            println("REQUEST: Sending " + message + " to " + module + "")
             val result = module !? message
+            println("REQUEST done")
             sender ! result
         }
       } catch {
@@ -51,12 +53,14 @@ class ModuleRegistry(modules: List[Module]) extends Actor {
     val clazz = getClass.getClassLoader.loadClass(fqcn)
     val constructor = clazz.getDeclaredConstructors()(0)
 
-    val typedArgs: List[Any] = args.tail.zip(constructor.getParameterTypes).map {e =>
+    val parameterTypes = constructor.getParameterTypes
+    val params = args.tail.padTo(parameterTypes.size, "")
+    val typedParams: List[Any] = params.zip(parameterTypes).map {e =>
       // Type conversions, extend when necessary
       if (e._2.equals(classOf[String])) e._1
       else if (e._2.equals(classOf[Int])) e._1.toInt
     }
-    constructor.newInstance(typedArgs.asInstanceOf[List[AnyRef]]: _*).asInstanceOf[AnyRef]
+    constructor.newInstance(typedParams.asInstanceOf[List[AnyRef]]: _*).asInstanceOf[AnyRef]
   }
 }
 
@@ -74,36 +78,49 @@ class Module(val name: String, val path: String, scalaSourceDirs: Seq[String], c
 
   private var sourceFiles: List[String] = Nil
 
+  val handler: PartialFunction[Any, Unit] = {
+    case StartCompiler => 
+      if (compiler == null) {
+        createSourceFilesList
+        createInteractiveCompiler
+        compiler.reloadFiles(sourceFiles)
+      }
+
+    case Shutdown =>
+      compiler.askShutdown
+      compiler = null
+      exit('stop)
+
+    case ReloadAllFiles =>
+      sender ! List("reloading files")
+      compiler.reloadFiles(sourceFiles)
+
+    case ReloadFile(file) =>
+      sender ! compiler.reloadFiles(List(file))
+      //sender ! compiler.reloadFile(file)
+
+    //case GetTypeAt(file, pos, prefix) =>
+      //sender ! compiler.getTypeAt(file, pos, prefix)
+
+    //case CompleteScope(file, pos, prefix) =>
+      //compiler.reloadFiles(List(file))
+      //sender ! compiler.completeScope(file, pos, prefix)
+
+    case CompleteType(file, pos, prefix) =>
+      sender ! compiler.completeType(file, pos, prefix)
+  }
+
+  val block: PartialFunction[Any, Any] = {
+    case message: Any => {
+      if (compiler != null)
+        compiler.blockWhileActive
+        message
+    }
+  }
+
   def act {
     loop {
-      receive {
-        case StartCompiler => 
-          if (compiler == null) {
-            createSourceFilesList
-            createInteractiveCompiler
-            compiler.reloadFiles(sourceFiles)
-          }
-
-        case Shutdown =>
-          compiler.askShutdown
-          compiler = null
-          exit('stop)
-
-        case ReloadAllFiles =>
-          sender ! compiler.reloadFiles(sourceFiles)
-
-        case ReloadFile(file) =>
-          sender ! compiler.reloadFile(file)
-
-        case GetTypeAt(file, pos, prefix) =>
-          sender ! compiler.getTypeAt(file, pos, prefix)
-
-        case CompleteScope(file, pos, prefix) =>
-          sender ! compiler.completeScope(file, pos, prefix)
-
-        case CompleteType(file, pos, prefix) =>
-          sender ! compiler.completeType(file, pos, prefix)
-      }
+      receive(block andThen handler)
     }
   }
 
@@ -125,33 +142,69 @@ class Module(val name: String, val path: String, scalaSourceDirs: Seq[String], c
     val compilerArgs = List("-classpath", cp, "-verbose")
     val settings = new Settings(Console.println)
     settings.processArguments(compilerArgs, true)
-    val reporter = new ConsoleReporter(settings)
+    //val reporter = new ConsoleReporter(settings)
+    val reporter = new PresentationReporter
     compiler = new InteractiveCompiler(settings, reporter)
     compiler.newRunnerThread
   }
 
+  override def toString = "Module(" + name + ")"
+
+  override def hashCode = name.hashCode * path.hashCode
+
 }
 
 
-class InteractiveCompiler(settings:Settings, reporter:Reporter) extends Global(settings, reporter) {
+class InteractiveCompiler(settings: Settings, reporter: PresentationReporter) extends Global(settings, reporter) {
 
-  def reloadFile(file: String) {
-    val x = new Response[Unit]
-    scheduler postWorkItem new WorkItem {
-      def apply() = respond(x)(reloadSources(List(getSourceFile(file))))
-      override def toString = "quickReload " + file
+  var active = false
+
+  var numberOfRuns: Long = 0
+
+  def blockWhileActive() {
+    while (active) {
+      println("BLOCKING compiler is active")
+      Thread.sleep(50)
     }
-    x.get
   }
 
-  def reloadFiles(files: List[String]) = {
+  def unitOfWork[A](body: => A): A = {
+    val start = numberOfRuns
+    val result = body
+    while (start == numberOfRuns) {
+      println("BLOCKING numberOfRuns did not change")
+      Thread.sleep(50)
+    }
+    result
+  }
+
+  //def quickReloadFile(file: String): List[String] = {
+    //println("COMPILER: reloading file")
+    //val x = new Response[Unit]
+    //scheduler postWorkItem new WorkItem {
+      //def apply() = respond(x)(reloadSources(List(getSourceFile(file))))
+      //override def toString = "quickReload " + file
+    //}
+    //x.get
+    //List("file reloaded")
+  //}
+
+  def reloadFiles(files: List[String]) = unitOfWork {
     val x = new Response[Unit]
     askReload(files.map(f => getSourceFile(f)), x)
-    x.get
-    Thread.sleep(2000) // FIXME: Timeout is required right now.
+    println(x.get)
+
+    println("-------------------------------------------------")
+    println("no of notes: " + reporter.allNotes.size)
+    reporter.allNotes.foreach(println)
+    println("-------------------------------------------------")
+
+    List("files reloaded")
   }
 
   def completeScope(file: String, cursor: Int, prefix: String): List[String] = {
+    println("COMPILER: complete scope")
+
     val x = new Response[List[Member]]
     val p = new OffsetPosition(getSourceFile(file), cursor)
 
@@ -171,11 +224,15 @@ class InteractiveCompiler(settings:Settings, reporter:Reporter) extends Global(s
     filtered.map {case ScopeMember(sym, tpe, true, viaImport) => sym.nameString}
   }
 
-  def completeType(file: String, cursor: Int, prefix: String): List[Member] = {
+  def completeType(file: String, cursor: Int, prefix: String): List[String] = {
+    println("COMPILER: complete type")
+
+    reloadFiles(List(file))
+
     val x = new Response[List[Member]]
     val p = new OffsetPosition(getSourceFile(file), cursor)
-
     askTypeCompletion(p, x)
+
     val names = x.get match {
       case Left(m) => m
       case Right(e) => List()
@@ -188,16 +245,11 @@ class InteractiveCompiler(settings:Settings, reporter:Reporter) extends Global(s
           false
       }
     }
-
-    println("#############-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#")
-    for (m <- names) {
-      println(m)
-    }
-    println("#############-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#")
-    filtered
+    filtered.map {case TypeMember(sym, tpe, true, viaImport, viaView) => sym.nameString + "|" + tpe}
   }
 
-  def getTypeAt(file: String, cursor: Int, prefix: String) = {
+  def getTypeAt(file: String, cursor: Int) = {
+    println("COMPILER: type at")
     val x = new Response[Tree]()
     val p = new OffsetPosition(getSourceFile(file), cursor)
 
@@ -245,6 +297,22 @@ class InteractiveCompiler(settings:Settings, reporter:Reporter) extends Global(s
     }
     else {
       Right(new Exception("Null tpe"))
+    }
+  }
+
+   override def recompile(units: List[RichCompilationUnit]) {
+    println("RECOMPILING start: " + units)
+    try {
+      active = true
+      super.recompile(units)
+    } catch {
+      case e: Throwable =>
+        println("RECOMPILING error: " + units)
+        throw e
+    } finally {
+      println("RECOMPILING finally: " + units)
+      active = false
+      numberOfRuns += 1
     }
   }
 

@@ -2,46 +2,80 @@
 " Version: 0.1
 
 
-function codefellow#CompleteScope(findstart, base)
+if exists("loaded_codefellow")
+    finish
+endif
+let loaded_codefellow=1
+
+let s:vimhomepath = split(&runtimepath, ',')
+let s:codefellowpath =  s:vimhomepath[0] . "/codefellow/"
+
+
+autocmd FileType scala set omnifunc=CodeFellowComplete
+
+" TODO: Need to do this in the background
+"autocmd BufWritePost *.scala call <SID>ReloadFile(expand("%:p"))
+
+" Backup
+"autocmd FileType scala imap <buffer> <C-s><C-m> <C-\><C-O>:call <CR>
+
+
+function s:RunClient(...)
+    let params = ""
+    let argnum = 1
+    while argnum <= a:0
+        let params = params . '"' . a:{argnum} . '" '
+        let argnum += 1
+    endwhile
+    let cmd = s:codefellowpath . 'client.sh "' . expand("%:p") . '" ' . params
+    return system(cmd)
+endfunction
+
+function CodeFellowComplete(findstart, base)
+    let line = getline('.')
     if a:findstart
-        let line = getline('.')
+        wa!
         let i = col('.') - 1
         while i > 0
-            let l:value = line[i - 1]
-            if l:value == '.'
+            let value = line[i - 1]
+            if value == '.' || value == ' '
                 return i
-            "else if l:value == ' '
-                "while l:value == ' '
-                    "let i -= 1
-                    "let l:value = line[i - 1]
-                "endwhile
-                "return i
             endif
             let i -= 1
         endwhile
         return i
     else
-        let l:pos = 0
-        for l in getline(1, line('.') - 1)
-            let l:pos += len(l)
-        endfor
-        let l:pos += col('.')
-        let l:pos -= 2 
-        
-        let l:cmd = '~/.vim/codefellow/client.sh "' . expand("%:p") . '" CompleteScope "' . expand("%:p") . '" ' . l:pos . ' ' . "h"
-        call input(l:cmd)
-        let l:result = system(l:cmd)
-        call input(l:result)
+        " Get position in current line
+        let typePos = 0
+        let i = col('.') - 1
+        while i > 0
+            let value = line[i]
+            if value != ' '
+                let typePos = i - 1
+                break
+            endif
+            let i -= 1
+        endwhile
 
+        " Add all lines above
+        for l in getline(1, line('.') - 1)
+            let typePos += len(l)
+        endfor
+
+        let result = <SID>RunClient("CompleteType", expand("%:p"), typePos, a:base)
 
         let res = []
-        call add(res, {'word': 'Theword1', 'abbr': a:base . 'word1', 'icase': 1})
-        call add(res, {'word': 'Theword2', 'abbr': 'word2', 'icase': 1})
-        call add(res, {'word': 'Theword3', 'abbr': 'word3', 'icase': 1})
+        for entryLine in split(result, "\n")
+            let entry = split(entryLine, "|")
+            call add(res, {'word': entry[0], 'abbr': entry[0] . entry[1], 'icase': 0})
+        endfor
+
         return res
     endif
 endfunction
 
-
+"function s:ReloadFile(file)
+    "call <SID>RunClient("ReloadFile", a:file)
+"endfunction
 
 
