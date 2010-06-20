@@ -62,7 +62,7 @@ function CodeFellowComplete(findstart, base)
             let typePos += len(l)
         endfor
 
-        let result = <SID>RunClient("CompleteType", expand("%:p"), typePos, a:base)
+        let result = <SID>RunClient("CompleteMember", expand("%:p"), typePos, a:base)
 
         let res = []
         for entryLine in split(result, "\n")

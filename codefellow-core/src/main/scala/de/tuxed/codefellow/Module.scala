@@ -68,9 +68,9 @@ case object StartCompiler
 case object Shutdown
 case object ReloadAllFiles
 case class ReloadFile(file: String)
-case class GetTypeAt(file: String, pos: Int, prefix: String)
+case class CompleteMember(file: String, pos: Int, prefix: String)
 case class CompleteScope(file: String, pos: Int, prefix: String)
-case class CompleteType(file: String, pos: Int, prefix: String)
+case class GetTypeAt(file: String, pos: Int, prefix: String)
 
 class Module(val name: String, val path: String, scalaSourceDirs: Seq[String], classpath: Seq[String]) extends Actor {
     
@@ -97,17 +97,15 @@ class Module(val name: String, val path: String, scalaSourceDirs: Seq[String], c
 
     case ReloadFile(file) =>
       sender ! compiler.reloadFiles(List(file))
-      //sender ! compiler.reloadFile(file)
+
+    case CompleteMember(file, pos, prefix) =>
+      sender ! compiler.completeMember(file, pos, prefix)
+
+    case CompleteScope(file, pos, prefix) =>
+      sender ! compiler.completeScope(file, pos, prefix)
 
     //case GetTypeAt(file, pos, prefix) =>
       //sender ! compiler.getTypeAt(file, pos, prefix)
-
-    //case CompleteScope(file, pos, prefix) =>
-      //compiler.reloadFiles(List(file))
-      //sender ! compiler.completeScope(file, pos, prefix)
-
-    case CompleteType(file, pos, prefix) =>
-      sender ! compiler.completeType(file, pos, prefix)
   }
 
   val block: PartialFunction[Any, Any] = {
@@ -178,17 +176,6 @@ class InteractiveCompiler(settings: Settings, reporter: PresentationReporter) ex
     result
   }
 
-  //def quickReloadFile(file: String): List[String] = {
-    //println("COMPILER: reloading file")
-    //val x = new Response[Unit]
-    //scheduler postWorkItem new WorkItem {
-      //def apply() = respond(x)(reloadSources(List(getSourceFile(file))))
-      //override def toString = "quickReload " + file
-    //}
-    //x.get
-    //List("file reloaded")
-  //}
-
   def reloadFiles(files: List[String]) = unitOfWork {
     val x = new Response[Unit]
     askReload(files.map(f => getSourceFile(f)), x)
@@ -200,6 +187,30 @@ class InteractiveCompiler(settings: Settings, reporter: PresentationReporter) ex
     println("-------------------------------------------------")
 
     List("files reloaded")
+  }
+
+  def completeMember(file: String, cursor: Int, prefix: String): List[String] = {
+    println("COMPILER: complete member")
+
+    reloadFiles(List(file))
+
+    val x = new Response[List[Member]]
+    val p = new OffsetPosition(getSourceFile(file), cursor)
+    askTypeCompletion(p, x)
+
+    val names = x.get match {
+      case Left(m) => m
+      case Right(e) => List()
+    }
+    val filtered = names filter {m =>
+      m match {
+        case TypeMember(sym, tpe, true, viaImport, viaView) =>
+          if (sym.nameString.startsWith(prefix)) true else false
+        case _ =>
+          false
+      }
+    }
+    filtered.map {case TypeMember(sym, tpe, true, viaImport, viaView) => sym.nameString + "|" + tpe}
   }
 
   def completeScope(file: String, cursor: Int, prefix: String): List[String] = {
@@ -222,30 +233,6 @@ class InteractiveCompiler(settings: Settings, reporter: PresentationReporter) ex
       }
     }
     filtered.map {case ScopeMember(sym, tpe, true, viaImport) => sym.nameString}
-  }
-
-  def completeType(file: String, cursor: Int, prefix: String): List[String] = {
-    println("COMPILER: complete type")
-
-    reloadFiles(List(file))
-
-    val x = new Response[List[Member]]
-    val p = new OffsetPosition(getSourceFile(file), cursor)
-    askTypeCompletion(p, x)
-
-    val names = x.get match {
-      case Left(m) => m
-      case Right(e) => List()
-    }
-    val filtered = names filter {m =>
-      m match {
-        case TypeMember(sym, tpe, true, viaImport, viaView) =>
-          if (sym.nameString.startsWith(prefix)) true else false
-        case _ =>
-          false
-      }
-    }
-    filtered.map {case TypeMember(sym, tpe, true, viaImport, viaView) => sym.nameString + "|" + tpe}
   }
 
   def getTypeAt(file: String, cursor: Int) = {
