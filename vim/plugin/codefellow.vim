@@ -12,6 +12,7 @@ let s:codefellowpath =  s:vimhomepath[0] . "/codefellow/"
 
 
 autocmd FileType scala set omnifunc=CodeFellowComplete
+
 autocmd FileType scala set ballooneval
 autocmd FileType scala set balloondelay=300
 autocmd FileType scala set balloonexpr=CodeFellowBalloonType()
@@ -22,15 +23,6 @@ autocmd FileType scala set balloonexpr=CodeFellowBalloonType()
 " Backup
 "autocmd FileType scala imap <buffer> <C-s><C-m> <C-\><C-O>:call <CR>
 
-
-autocmd FileType scala imap <buffer> <C-s><C-m> <C-\><C-O>:py hello()<CR>
-python << endpython
-
-def hello():
-    print "HELLO"
-    print __name__
-
-endpython
 
 function s:RunClient(...)
     let params = ""
@@ -44,6 +36,15 @@ function s:RunClient(...)
 endfunction
 
 function CodeFellowComplete(findstart, base)
+    python << endpython
+import vim
+result = [dict(word="aaa", abbr="AAA", icase=0),
+            dict(word="bbb", abbr="BBB", icase=0),
+            dict(word="ccc", abbr="CCC", icase=0)]
+vim.eval("input(
+endpython
+
+
     let line = getline('.')
     if a:findstart
         wa!

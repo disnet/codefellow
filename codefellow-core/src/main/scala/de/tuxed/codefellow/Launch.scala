@@ -13,9 +13,9 @@ object Launch {
     val root = if (args.size > 0) args(0) else "."
     val modules = findAllModules(root)
     val project = new Project(modules)
+    project.start()
     val socketHandler = new SocketHandler(project)
     socketHandler.open()
-    project.start()
   }
 
   def findAllModules(rootPath: String): List[Module] = {
