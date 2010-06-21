@@ -12,16 +12,10 @@ object Launch {
   def main(args: Array[String]) {
     val root = if (args.size > 0) args(0) else "."
     val modules = findAllModules(root)
-    
-    val registry = new ModuleRegistry(modules)
-    registry.start
-
-    //modules(0).start
-    //modules(0) ! StartCompiler
-    //modules(0) ! GetTypeAt("/home/roman/Dateien/Projekte/workspace/codefellow/testproject/project2/src/main/scala/Project2.scala", 134)
-    //modules(0) ! CompleteScope("/home/roman/Dateien/Projekte/workspace/codefellow/testproject/project2/src/main/scala/Project2.scala", 147)
-    //modules(0) ! CompleteType("/home/roman/Dateien/Projekte/workspace/codefellow/testproject/project2/src/main/scala/Project2.scala", 139, "")
-    //modules(0) ! Shutdown
+    val project = new Project(modules)
+    val socketHandler = new SocketHandler(project)
+    socketHandler.open()
+    project.start()
   }
 
   def findAllModules(rootPath: String): List[Module] = {

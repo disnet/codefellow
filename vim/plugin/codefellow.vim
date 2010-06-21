@@ -23,6 +23,15 @@ autocmd FileType scala set balloonexpr=CodeFellowBalloonType()
 "autocmd FileType scala imap <buffer> <C-s><C-m> <C-\><C-O>:call <CR>
 
 
+autocmd FileType scala imap <buffer> <C-s><C-m> <C-\><C-O>:py hello()<CR>
+python << endpython
+
+def hello():
+    print "HELLO"
+    print __name__
+
+endpython
+
 function s:RunClient(...)
     let params = ""
     let argnum = 1

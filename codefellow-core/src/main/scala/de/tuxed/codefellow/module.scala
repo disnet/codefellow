@@ -19,57 +19,14 @@ import scala.tools.nsc.symtab.Types
 import scala.tools.nsc.symtab.Flags
 
 
-case class Request(args: List[String])
-
-class ModuleRegistry(modules: List[Module]) extends Actor {
-  def act {
-    modules.foreach(_.start)
-    modules.foreach(_ ! StartCompiler) // TODO: Defer to improve startup time?
-    RemoteActor.alive(9051)
-    RemoteActor.register('ModuleRegistry, self)
-    loop {
-      try {
-        receive {
-          case Request(moduleIdentifierFile :: args) =>
-            val module = modules.filter(m => moduleIdentifierFile.startsWith(m.path))(0)
-            val message = createMessage(args)
-            println("REQUEST: Sending " + message + " to " + module + "")
-            val result = module !? message
-            println("REQUEST result:" + result)
-            sender ! result
-        }
-      } catch {
-        case e: Exception =>
-          e.printStackTrace
-          sender ! List("")
-      }
-    }
-  }
-
-  private def createMessage(args: List[String]): AnyRef = {
-    val packageName = getClass.getPackage.getName
-    val fqcn = packageName + "." + args(0)
-    val clazz = getClass.getClassLoader.loadClass(fqcn)
-    val constructor = clazz.getDeclaredConstructors()(0)
-
-    val parameterTypes = constructor.getParameterTypes
-    val params = args.tail.padTo(parameterTypes.size, "")
-    val typedParams: List[Any] = params.zip(parameterTypes).map {e =>
-      // Type conversions, extend when necessary
-      if (e._2.equals(classOf[String])) e._1
-      else if (e._2.equals(classOf[Int])) e._1.toInt
-    }
-    constructor.newInstance(typedParams.asInstanceOf[List[AnyRef]]: _*).asInstanceOf[AnyRef]
-  }
-}
-
-case object StartCompiler
-case object Shutdown
-case object ReloadAllFiles
-case class ReloadFile(file: String)
-case class CompleteMember(file: String, pos: Int, prefix: String)
-case class CompleteScope(file: String, pos: Int, prefix: String)
-case class TypeInfo(file: String, pos: Int)
+sealed class Message
+case object StartCompiler extends Message
+case object Shutdown extends Message
+case object ReloadAllFiles extends Message
+case class ReloadFile(file: String) extends Message
+case class CompleteMember(file: String, pos: Int, prefix: String) extends Message
+case class CompleteScope(file: String, pos: Int, prefix: String) extends Message
+case class TypeInfo(file: String, pos: Int) extends Message
 
 class Module(val name: String, val path: String, scalaSourceDirs: Seq[String], classpath: Seq[String]) extends Actor {
     
