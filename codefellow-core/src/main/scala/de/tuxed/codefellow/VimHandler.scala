@@ -8,16 +8,16 @@ import java.net._
 import scala.util.parsing.json.JSON
 
 
-class SocketHandler(moduleRegistry: ModuleRegistry) {
+class VimHandler(moduleRegistry: ModuleRegistry) {
 
   def open() {
     val listener = new ServerSocket(9081)
     while (true) {
       try {
         val socket = listener.accept()
-        println("SocketHandler: start")
+        println("VimHandler: Connection start")
         handleConnection(socket)
-        println("SocketHandler: end")
+        println("VimHandler: Connection end")
       }
       catch {
         case e: IOException =>
@@ -44,13 +44,14 @@ class SocketHandler(moduleRegistry: ModuleRegistry) {
         tmp = scanner.nextLine
       }
 
+      println("VimHandler: Request [" + line + "]")
       createRequestFromJson(line) match {
         case None => throw new RuntimeException("Request could not be parsed:" + line)
         case Some(request) => {
-          println("GOT REQUEST:" + request)
           val result = moduleRegistry !? request
-          println("RESULT:" + result)
-          out.write(result.asInstanceOf[List[String]].mkString("\n"))
+          val forVim = result.asInstanceOf[List[String]].mkString("\n")
+          println("VimHandler: Response [" + forVim + "]")
+          out.write(forVim)
           out.flush()
         }
       }
@@ -62,7 +63,6 @@ class SocketHandler(moduleRegistry: ModuleRegistry) {
   }
 
   private def createRequestFromJson(json: String): Option[Request] = {
-    println("JSON parsing:" + json)
     JSON.parseFull(json) match {
       case None => None
       case Some(map: Map[String, Any]) => {

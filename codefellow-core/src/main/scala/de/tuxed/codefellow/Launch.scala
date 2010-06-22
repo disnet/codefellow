@@ -14,8 +14,8 @@ object Launch {
     val modules = findAllModules(root)
     val moduleRegistry = new ModuleRegistry(modules)
     moduleRegistry.start()
-    val socketHandler = new SocketHandler(moduleRegistry)
-    socketHandler.open()
+    val vimHandler = new VimHandler(moduleRegistry)
+    vimHandler.open()
   }
 
   def findAllModules(rootPath: String): List[Module] = {

@@ -17,14 +17,9 @@ autocmd FileType scala setlocal balloonexpr=CodeFellowBalloonType()
 " Need to do this in the background
 "autocmd BufWritePost *.scala call <SID>ReloadFile(expand("%:p"))
 
-
-python << endpython
-import socket
-endpython
-
-
 function s:SendMessage(type, ...)
 python << endpython
+import socket
 import vim
 s = socket.create_connection(("localhost", 9081))
 
@@ -52,6 +47,13 @@ vim.command('return "' + data + '"')
 endpython
 endfunction
 
+function s:getCursorIndex()
+    let index = v:beval_col
+    for l in getline(1, v:beval_lnum - 1)
+        let index += len(l)
+    endfor
+    return index
+endfunction
 
 function CodeFellowComplete(findstart, base)
     let line = getline('.')
@@ -98,12 +100,8 @@ endfunction
 
 
 function CodeFellowBalloonType()
-    let index = v:beval_col
-    for l in getline(1, v:beval_lnum - 1)
-        let index += len(l)
-    endfor
-
-    let result = <SID>RunClient("TypeInfo", expand("%:p"), index)
+    let index = <SID>getCursorIndex()
+    let result = <SID>SendMessage("TypeInfo", expand("%:p"), index)
     return result
 endfunction
 

@@ -32,9 +32,7 @@ class ModuleRegistry(modules: List[Module]) extends Actor {
           case Request(moduleIdentifierFile, message) => {
             // TODO Check if a module was found
             val module = modules.filter(m => moduleIdentifierFile.startsWith(m.path))(0)
-            println("REQUEST: Sending " + message + " to " + module + "")
             val result = module !? message
-            println("REQUEST result:" + result)
             sender ! result
           }
         }
