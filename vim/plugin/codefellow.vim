@@ -14,45 +14,62 @@ autocmd FileType scala setlocal ballooneval
 autocmd FileType scala setlocal balloondelay=300
 autocmd FileType scala setlocal balloonexpr=CodeFellowBalloonType()
 
-" Need to do this in the background
-"autocmd BufWritePost *.scala call <SID>ReloadFile(expand("%:p"))
+" Compilation on save
+autocmd BufWritePost *.scala call CodeFellowReloadFile()
 
 function s:SendMessage(type, ...)
 python << endpython
-import socket
-import vim
-s = socket.create_connection(("localhost", 9081))
+try:
+    import socket
+    import vim
+    s = socket.create_connection(("localhost", 9081))
 
-argsSize = int(vim.eval("a:0"))
-args = []
-for i in range(1, argsSize + 1):
-    args.append(vim.eval("a:" + str(i)))
+    argsSize = int(vim.eval("a:0"))
+    args = []
+    for i in range(1, argsSize + 1):
+        args.append(vim.eval("a:" + str(i)))
 
-msg = "{"
-msg += '"moduleIdentifierFile": "' + vim.eval('expand("%:p")') + '",'
-msg += '"message": "' + vim.eval("a:type") + '",'
-msg += '"arguments": [' + ",".join(map(lambda e: '"' + e + '"', args)) + ']'
-msg += "}"
+    msg = "{"
+    msg += '"moduleIdentifierFile": "' + vim.eval('expand("%:p")') + '",'
+    msg += '"message": "' + vim.eval("a:type") + '",'
+    msg += '"arguments": [' + ",".join(map(lambda e: '"' + e + '"', args)) + ']'
+    msg += "}"
+    msg += "\nENDREQUEST\n"
+    s.sendall(msg)
 
-s.sendall(msg)
-s.sendall("\nENDREQUEST\n")
+    data = ""
+    while 1:
+        tmp = s.recv(1024)
+        if not tmp:
+            break
+        data += tmp
 
-data = ""
-while 1:
-    tmp = s.recv(1024)
-    if not tmp:
-        break
-    data += tmp
-vim.command('return "' + data + '"')
+    vim.command('return "' + data + '"')
+except:
+    # Probably not connected
+    # Stay silent to not interrupt
+    vim.command('return ""')
 endpython
 endfunction
 
-function s:getCursorIndex()
+function s:getMousePointerOffset()
     let index = v:beval_col
     for l in getline(1, v:beval_lnum - 1)
-        let index += len(l)
+        let index += len(l) + 1
     endfor
     return index
+endfunction
+
+function s:getCurrentLineOffset()
+    let index = 0
+    for l in getline(1, line('.') - 1)
+        let index += len(l) + 1
+    endfor
+    return index
+endfunction
+
+function s:getFileName()
+    return expand("%:p")
 endfunction
 
 function CodeFellowComplete(findstart, base)
@@ -82,15 +99,13 @@ function CodeFellowComplete(findstart, base)
         endwhile
 
         " Add all lines above
-        for l in getline(1, line('.') - 1)
-            let typePos += len(l)
-        endfor
+        let typePos += <SID>getCurrentLineOffset()
 
         let result = <SID>SendMessage("CompleteMember", expand("%:p"), typePos, a:base)
 
         let res = []
         for entryLine in split(result, "\n")
-            let entry = split(entryLine, "|")
+            let entry = split(entryLine, ";")
             call add(res, {'word': entry[0], 'abbr': entry[0] . entry[1], 'icase': 0})
         endfor
 
@@ -98,14 +113,12 @@ function CodeFellowComplete(findstart, base)
     endif
 endfunction
 
-
 function CodeFellowBalloonType()
-    let index = <SID>getCursorIndex()
-    let result = <SID>SendMessage("TypeInfo", expand("%:p"), index)
+    let result = <SID>SendMessage("TypeInfo", <SID>getFileName(), <SID>getMousePointerOffset())
     return result
 endfunction
 
-
-
-
+function CodeFellowReloadFile()
+    return <SID>SendMessage("ReloadFile", <SID>getFileName())
+endfunction
 

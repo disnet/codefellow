@@ -34,42 +34,53 @@ class Module(val name: String, val path: String, scalaSourceDirs: Seq[String], c
 
   private var sourceFiles: List[String] = Nil
 
-  val handler: PartialFunction[Any, Unit] = {
-    case StartCompiler => 
-      if (compiler == null) {
-        createSourceFilesList
-        createInteractiveCompiler
-        compiler.reloadFiles(sourceFiles)
-      }
-
-    case Shutdown =>
-      compiler.askShutdown
-      compiler = null
-      exit('stop)
-
-    case ReloadAllFiles =>
-      sender ! List("reloading files")
-      compiler.reloadFiles(sourceFiles)
-
-    case ReloadFile(file) =>
-      sender ! compiler.reloadFiles(List(file))
-
-    case CompleteMember(file, pos, prefix) =>
-      sender ! compiler.completeMember(file, pos, prefix)
-
-    case CompleteScope(file, pos, prefix) =>
-      sender ! compiler.completeScope(file, pos, prefix)
-
-    case TypeInfo(file, pos) =>
-      sender ! compiler.typeInfo(file, pos)
-  }
-
   val block: PartialFunction[Any, Any] = {
     case message: Any => {
       if (compiler != null) {
         compiler.blockWhileActive
       }
       message
+    }
+  }
+
+  val handler: PartialFunction[Any, Unit] = {
+    case StartCompiler => {
+      startCompiler()
+    }
+
+    case Shutdown => {
+      if (compiler != null) {
+        compiler.askShutdown
+        compiler = null
+      }
+      exit('stop)
+    }
+
+    case ReloadAllFiles => {
+      sender ! List("reloading files")
+      startCompiler()
+      compiler.reloadFiles(sourceFiles)
+    }
+
+    case ReloadFile(file) => {
+      sender ! List("reloading file")
+      startCompiler()
+      compiler.reloadFiles(List(file))
+    }
+
+    case CompleteMember(file, pos, prefix) => {
+      startCompiler()
+      sender ! compiler.completeMember(file, pos, prefix)
+    }
+
+    case CompleteScope(file, pos, prefix) => {
+      startCompiler()
+      sender ! compiler.completeScope(file, pos, prefix)
+    }
+
+    case TypeInfo(file, pos) => {
+      startCompiler()
+      sender ! compiler.typeInfo(file, pos)
     }
   }
 
@@ -101,6 +112,14 @@ class Module(val name: String, val path: String, scalaSourceDirs: Seq[String], c
     val reporter = new PresentationReporter
     compiler = new InteractiveCompiler(settings, reporter)
     compiler.newRunnerThread
+  }
+
+  private def startCompiler() {
+    if (compiler == null) {
+      createSourceFilesList
+      createInteractiveCompiler
+      compiler.reloadFiles(sourceFiles)
+    }
   }
 
   override def toString = "Module(" + name + ")"
@@ -137,12 +156,6 @@ class InteractiveCompiler(settings: Settings, reporter: PresentationReporter) ex
     val x = new Response[Unit]
     askReload(files.map(f => getSourceFile(f)), x)
     println(x.get)
-
-    println("-------------------------------------------------")
-    println("no of notes: " + reporter.allNotes.size)
-    reporter.allNotes.foreach(println)
-    println("-------------------------------------------------")
-
     List("files reloaded")
   }
 
@@ -167,7 +180,7 @@ class InteractiveCompiler(settings: Settings, reporter: PresentationReporter) ex
           false
       }
     }
-    filtered.map {case TypeMember(sym, tpe, true, viaImport, viaView) => sym.nameString + "|" + tpe}
+    filtered.map {case TypeMember(sym, tpe, true, viaImport, viaView) => sym.nameString + ";" + tpe}
   }
 
   def completeScope(file: String, cursor: Int, prefix: String): List[String] = {
@@ -257,6 +270,11 @@ class InteractiveCompiler(settings: Settings, reporter: PresentationReporter) ex
       active = false
       numberOfRuns += 1
     }
+
+    println("-------------------------------------------------")
+    println("no of notes: " + reporter.allNotes.size)
+    reporter.allNotes.foreach(println)
+    println("-------------------------------------------------")
   }
 
 }

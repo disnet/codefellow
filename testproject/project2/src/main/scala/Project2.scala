@@ -1,2 +1,27 @@
-package de.tuxed.codefellow.testproject2; import de.tuxed.codefellow.testproject1.Project1;
-object Project2 { def testabc() = "Hello" + Project1.helloInt; def testabd() = "Hello" + Project1.helloInt; def tt() = {val l = List(1,2); l } 
+package de.tuxed.codefellow.testproject2
+
+
+object Project2 {
+
+  def test1(arg: String) = {
+    arg.substring(1)
+  }
+
+  def test2() {
+    val res = test1("abc")
+    println(res)
+
+    val list = List(1, 2, 3)
+    val b = list match {
+      case x :: xs => x.byteValue
+    }
+    println(b)
+    b.toLong
+
+  }
+
+}
+
+
+
+

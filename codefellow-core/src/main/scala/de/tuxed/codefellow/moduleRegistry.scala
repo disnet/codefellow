@@ -25,15 +25,20 @@ class ModuleRegistry(modules: List[Module]) extends Actor {
 
   def act {
     modules foreach { _.start }
-    modules foreach { _ ! StartCompiler } // TODO: Defer to improve startup time?
+    //modules foreach { _ ! StartCompiler } // TODO: Defer to improve startup time?
     loop {
       try {
         receive {
           case Request(moduleIdentifierFile, message) => {
             // TODO Check if a module was found
-            val module = modules.filter(m => moduleIdentifierFile.startsWith(m.path))(0)
-            val result = module !? message
-            sender ! result
+            val selected = modules.filter(m => moduleIdentifierFile.startsWith(m.path))
+            if (selected.size != 0) {
+              val result = selected(0) !? message
+              sender ! result
+            } else {
+              println("File [" + moduleIdentifierFile + "] not part of the current project!")
+              sender ! List("")
+            }
           }
         }
       } catch {

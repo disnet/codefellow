@@ -44,13 +44,13 @@ class VimHandler(moduleRegistry: ModuleRegistry) {
         tmp = scanner.nextLine
       }
 
-      println("VimHandler: Request [" + line + "]")
+      //println("VimHandler: Request [" + line + "]")
       createRequestFromJson(line) match {
         case None => throw new RuntimeException("Request could not be parsed:" + line)
         case Some(request) => {
           val result = moduleRegistry !? request
-          val forVim = result.asInstanceOf[List[String]].mkString("\n")
-          println("VimHandler: Response [" + forVim + "]")
+          val forVim = createVimScript(result.asInstanceOf[List[String]].mkString("\n"))
+          //println("VimHandler: Response [" + forVim + "]")
           out.write(forVim)
           out.flush()
         }
@@ -90,6 +90,10 @@ class VimHandler(moduleRegistry: ModuleRegistry) {
         Some(Request(moduleIdentifierFile, m))
       }
     }
+  }
+
+  private def createVimScript(string: String): String = {
+    string.replace("\"", "\\\"")
   }
 
 }
