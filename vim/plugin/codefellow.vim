@@ -1,50 +1,59 @@
 " Author: Roman Roelofsen <roman.roelofsen@gmail.com>
 " Version: 0.1
 
-
 if exists("loaded_codefellow")
     finish
 endif
 let loaded_codefellow=1
 
-let s:vimhomepath = split(&runtimepath, ',')
-let s:codefellowpath =  s:vimhomepath[0] . "/codefellow/"
+" OmniCompletion
+autocmd FileType scala setlocal omnifunc=CodeFellowComplete
 
+" Balloon type information
+autocmd FileType scala setlocal ballooneval
+autocmd FileType scala setlocal balloondelay=300
+autocmd FileType scala setlocal balloonexpr=CodeFellowBalloonType()
 
-autocmd FileType scala set omnifunc=CodeFellowComplete
-
-autocmd FileType scala set ballooneval
-autocmd FileType scala set balloondelay=300
-autocmd FileType scala set balloonexpr=CodeFellowBalloonType()
-
-" TODO: Need to do this in the background
+" Need to do this in the background
 "autocmd BufWritePost *.scala call <SID>ReloadFile(expand("%:p"))
 
-" Backup
-"autocmd FileType scala imap <buffer> <C-s><C-m> <C-\><C-O>:call <CR>
 
-
-function s:RunClient(...)
-    let params = ""
-    let argnum = 1
-    while argnum <= a:0
-        let params = params . '"' . a:{argnum} . '" '
-        let argnum += 1
-    endwhile
-    let cmd = s:codefellowpath . 'client.sh "' . expand("%:p") . '" ' . params
-    return system(cmd)
-endfunction
-
-function CodeFellowComplete(findstart, base)
-    python << endpython
-import vim
-result = [dict(word="aaa", abbr="AAA", icase=0),
-            dict(word="bbb", abbr="BBB", icase=0),
-            dict(word="ccc", abbr="CCC", icase=0)]
-vim.eval("input(
+python << endpython
+import socket
 endpython
 
 
+function s:SendMessage(type, ...)
+python << endpython
+import vim
+s = socket.create_connection(("localhost", 9081))
+
+argsSize = int(vim.eval("a:0"))
+args = []
+for i in range(1, argsSize + 1):
+    args.append(vim.eval("a:" + str(i)))
+
+msg = "{"
+msg += '"moduleIdentifierFile": "' + vim.eval('expand("%:p")') + '",'
+msg += '"message": "' + vim.eval("a:type") + '",'
+msg += '"arguments": [' + ",".join(map(lambda e: '"' + e + '"', args)) + ']'
+msg += "}"
+
+s.sendall(msg)
+s.sendall("\nENDREQUEST\n")
+
+data = ""
+while 1:
+    tmp = s.recv(1024)
+    if not tmp:
+        break
+    data += tmp
+vim.command('return "' + data + '"')
+endpython
+endfunction
+
+
+function CodeFellowComplete(findstart, base)
     let line = getline('.')
     if a:findstart
         wa!
@@ -75,7 +84,7 @@ endpython
             let typePos += len(l)
         endfor
 
-        let result = <SID>RunClient("CompleteMember", expand("%:p"), typePos, a:base)
+        let result = <SID>SendMessage("CompleteMember", expand("%:p"), typePos, a:base)
 
         let res = []
         for entryLine in split(result, "\n")
@@ -86,10 +95,6 @@ endpython
         return res
     endif
 endfunction
-
-"function s:ReloadFile(file)
-    "call <SID>RunClient("ReloadFile", a:file)
-"endfunction
 
 
 function CodeFellowBalloonType()

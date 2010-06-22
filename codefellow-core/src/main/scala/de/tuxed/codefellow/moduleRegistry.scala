@@ -21,25 +21,28 @@ import scala.tools.nsc.symtab.Flags
 
 case class Request(moduleIdentifierFile: String, message: Message)
 
-class Project(modules: List[Module]) extends Actor {
+class ModuleRegistry(modules: List[Module]) extends Actor {
 
   def act {
     modules foreach { _.start }
-    modules foreach { _ ! StartCompiler } // TODO: Defer to improve startup time
+    modules foreach { _ ! StartCompiler } // TODO: Defer to improve startup time?
     loop {
       try {
         receive {
-          case Request(moduleIdentifierFile, message) =>
+          case Request(moduleIdentifierFile, message) => {
+            // TODO Check if a module was found
             val module = modules.filter(m => moduleIdentifierFile.startsWith(m.path))(0)
             println("REQUEST: Sending " + message + " to " + module + "")
             val result = module !? message
             println("REQUEST result:" + result)
             sender ! result
+          }
         }
       } catch {
-        case e: Exception =>
+        case e: Exception => {
           e.printStackTrace
           sender ! List("")
+        }
       }
     }
   }

@@ -12,9 +12,9 @@ object Launch {
   def main(args: Array[String]) {
     val root = if (args.size > 0) args(0) else "."
     val modules = findAllModules(root)
-    val project = new Project(modules)
-    project.start()
-    val socketHandler = new SocketHandler(project)
+    val moduleRegistry = new ModuleRegistry(modules)
+    moduleRegistry.start()
+    val socketHandler = new SocketHandler(moduleRegistry)
     socketHandler.open()
   }
 

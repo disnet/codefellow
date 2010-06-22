@@ -8,7 +8,7 @@ import java.net._
 import scala.util.parsing.json.JSON
 
 
-class SocketHandler(project: Project) {
+class SocketHandler(moduleRegistry: ModuleRegistry) {
 
   def open() {
     val listener = new ServerSocket(9081)
@@ -33,15 +33,24 @@ class SocketHandler(project: Project) {
     val scanner = new Scanner(new InputStreamReader(socket.getInputStream()))
     val out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()))
     try {
-      var line = scanner.nextLine
+      var line = ""
+      // Read lines until ENDREQUEST
+      var tmp = ""
+      while (tmp != "ENDREQUEST") {
+        line += tmp
+        while (!scanner.hasNextLine) {
+          Thread.sleep(50)
+        }
+        tmp = scanner.nextLine
+      }
+
       createRequestFromJson(line) match {
         case None => throw new RuntimeException("Request could not be parsed:" + line)
         case Some(request) => {
           println("GOT REQUEST:" + request)
-          val result = project !? request
+          val result = moduleRegistry !? request
           println("RESULT:" + result)
-          //out.write(result.toString + "\n")
-          out.write("\n\nBLABLA\n")
+          out.write(result.asInstanceOf[List[String]].mkString("\n"))
           out.flush()
         }
       }

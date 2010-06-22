@@ -7,5 +7,10 @@ object Project2 {
 
   def testabc() = "Hello" + Project1.helloListOfInts
 
+  def testm() {
+    val numbers = List(1, 2, 3, 4, 5, 6)
+    1
+  }
+
 }
 
