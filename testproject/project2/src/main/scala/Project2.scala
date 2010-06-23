@@ -16,7 +16,6 @@ object Project2 {
       case x :: xs => x.byteValue
     }
     println(b)
-    b.toLong
 
   }
 

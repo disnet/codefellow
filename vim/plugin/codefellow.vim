@@ -86,6 +86,7 @@ function CodeFellowComplete(findstart, base)
         endwhile
         return i
     else
+        echo "CodeFellow: Please wait..."
         " Get position in current line
         let typePos = 0
         let i = col('.') - 1
@@ -102,6 +103,7 @@ function CodeFellowComplete(findstart, base)
         let typePos += <SID>getCurrentLineOffset()
 
         let result = <SID>SendMessage("CompleteMember", expand("%:p"), typePos, a:base)
+        "let result = <SID>SendMessage("CompleteScope", expand("%:p"), typePos, a:base)
 
         let res = []
         for entryLine in split(result, "\n")
@@ -114,8 +116,14 @@ function CodeFellowComplete(findstart, base)
 endfunction
 
 function CodeFellowBalloonType()
-    let result = <SID>SendMessage("TypeInfo", <SID>getFileName(), <SID>getMousePointerOffset())
-    return result
+    let bufno = bufnr(bufname("%"))
+    let bufmod = getbufvar(bufno, "&mod")
+    if bufmod == 1
+        return "Save buffer to get type information"
+    else
+        let result = <SID>SendMessage("TypeInfo", <SID>getFileName(), <SID>getMousePointerOffset())
+        return result
+    endif
 endfunction
 
 function CodeFellowReloadFile()
