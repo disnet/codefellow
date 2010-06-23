@@ -18,4 +18,9 @@ h2. Screencast
 
 Check out the "screencast":http://github.com/downloads/romanroe/codefellow/codefellow_sc_1d.avi to see CodeFellow in action!
 
+h2. Acknowledgement
+
+* Almost all functionality for the code completion is already implemented in the Scala compiler. CodeFellow would not be possible without the work of the Scala compiler team!
+* I learned most about the Scala compiler by looking at and using the source code from "aemoncannon's":http://github.com/aemoncannon emacs mode "ensime":http://github.com/aemoncannon/ensime. Thank you!
+
 
