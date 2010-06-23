@@ -1,0 +1,22 @@
+
+h1. CodeFellow
+
+*Scala development tool for Vim and Sbt*
+
+h2. Features
+
+The following features are already implemented in Vim:
+
+* Member completion 
+* Get type information for expressions
+
+Planned:
+
+* Too many :-)
+
+h2. Screencast
+
+Check out the "screencast":http://github.com/downloads/romanroe/codefellow/codefellow_sc_1.avi
+to see CodeFellow in action!
+
+
