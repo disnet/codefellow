@@ -16,6 +16,6 @@ Planned:
 
 h2. Screencast
 
-Check out the "screencast":http://github.com/downloads/romanroe/codefellow/codefellow_sc_1.avi to see CodeFellow in action!
+Check out the "screencast":http://github.com/downloads/romanroe/codefellow/codefellow_sc_1d.avi to see CodeFellow in action!
 
 
