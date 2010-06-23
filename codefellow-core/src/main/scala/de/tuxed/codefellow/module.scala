@@ -162,7 +162,7 @@ class InteractiveCompiler(settings: Settings, reporter: PresentationReporter) ex
   def completeMember(file: String, cursor: Int, prefix: String): List[String] = {
     println("COMPILER: complete member")
 
-    reloadFiles(List(file))
+    //reloadFiles(List(file))
 
     val x = new Response[List[Member]]
     val p = new OffsetPosition(getSourceFile(file), cursor)
@@ -180,16 +180,18 @@ class InteractiveCompiler(settings: Settings, reporter: PresentationReporter) ex
           false
       }
     }
-    filtered.map {case TypeMember(sym, tpe, true, viaImport, viaView) => sym.nameString + ";" + tpe}
+    filtered map { case TypeMember(sym, tpe, true, viaImport, viaView) => sym.nameString + ";" + tpe }
   }
 
   def completeScope(file: String, cursor: Int, prefix: String): List[String] = {
     println("COMPILER: complete scope")
 
+    //reloadFiles(List(file))
+
     val x = new Response[List[Member]]
     val p = new OffsetPosition(getSourceFile(file), cursor)
-
     askScopeCompletion(p, x)
+
     val names = x.get match {
       case Left(m) => m
       case Right(e) => List()
@@ -202,7 +204,7 @@ class InteractiveCompiler(settings: Settings, reporter: PresentationReporter) ex
           false
       }
     }
-    filtered.map {case ScopeMember(sym, tpe, true, viaImport) => sym.nameString}
+    filtered map { case ScopeMember(sym, tpe, true, viaImport) => sym.nameString + ";" + viaImport }
   }
 
   def typeInfo(file: String, cursor: Int) = {
