@@ -13,10 +13,11 @@ autocmd FileType scala imap <buffer> <C-S-SPACE> <C-O>:call setbufvar(bufnr(bufn
 autocmd FileType scala map <buffer> <F1> :call CodeFellowPrintTypeInfo()<CR>
 
 " Balloon type information
-" TODO Check if balloon support is available
-autocmd FileType scala setlocal ballooneval
-autocmd FileType scala setlocal balloondelay=300
-autocmd FileType scala setlocal balloonexpr=CodeFellowBalloonType()
+if has("balloon_eval")
+    autocmd FileType scala setlocal ballooneval
+    autocmd FileType scala setlocal balloondelay=300
+    autocmd FileType scala setlocal balloonexpr=CodeFellowBalloonType()
+endif
 
 " Compilation on save
 autocmd BufWritePost *.scala call CodeFellowReloadFile()
