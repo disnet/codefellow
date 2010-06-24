@@ -8,8 +8,8 @@ let loaded_codefellow=1
 
 " OmniCompletion
 autocmd FileType scala setlocal omnifunc=CodeFellowComplete
-autocmd FileType scala imap <buffer> <C-SPACE> <C-O>:call setbufvar(bufnr(bufname("%")), "&omnifunc", "CodeFellowCompleteMember")<CR><C-X><C-O>
-autocmd FileType scala imap <buffer> <C-S-SPACE> <C-O>:call setbufvar(bufnr(bufname("%")), "&omnifunc", "CodeFellowCompleteScope")<CR><C-X><C-O>
+autocmd FileType scala imap <buffer> <C-SPACE> <C-O>:call CodeFellowTriggerCompleteMember()<CR>
+autocmd FileType scala imap <buffer> <C-S-SPACE> <C-O>:call CodeFellowTriggerCompleteScope()<CR>
 autocmd FileType scala map <buffer> <F1> :call CodeFellowPrintTypeInfo()<CR>
 
 " Balloon type information
@@ -93,7 +93,7 @@ endfunction
 " Returns the absolute offset of the cursor
 "
 function s:getCursorOffset()
-    return <SID>getCurrentLineOffset() + col('.') - 1
+    return <SID>getCurrentLineOffset() + col('.')
 endfunction
 
 "
@@ -137,6 +137,11 @@ function CodeFellowComplete(findstart, base)
     return CodeFellowCompleteMember(a:findstart, a:base)
 endfunction
 
+function CodeFellowTriggerCompleteMember()
+    call setbufvar(bufnr(bufname("%")), "&omnifunc", "CodeFellowCompleteMember")
+    call feedkeys("\<C-X>\<C-O>", "n")
+endfunction
+
 function CodeFellowCompleteMember(findstart, base)
     if a:findstart
         return <SID>getWordUnderCursorIndex()
@@ -156,6 +161,11 @@ function CodeFellowCompleteMember(findstart, base)
         endfor
         return res
     endif
+endfunction
+
+function CodeFellowTriggerCompleteScope()
+    call setbufvar(bufnr(bufname("%")), "&omnifunc", "CodeFellowCompleteScope")
+    call feedkeys("\<C-X>\<C-O>", "n")
 endfunction
 
 function CodeFellowCompleteScope(findstart, base)
