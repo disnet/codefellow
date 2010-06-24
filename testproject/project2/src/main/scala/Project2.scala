@@ -1,6 +1,7 @@
 package de.tuxed.codefellow.testproject2
 
 
+
 object Project2 {
 
   def test1(arg: String) = {

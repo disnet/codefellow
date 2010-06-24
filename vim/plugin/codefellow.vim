@@ -8,8 +8,11 @@ let loaded_codefellow=1
 
 " OmniCompletion
 autocmd FileType scala setlocal omnifunc=CodeFellowComplete
+autocmd FileType scala imap <buffer> <C-SPACE> <C-O>:call setbufvar(bufnr(bufname("%")), "&omnifunc", "CodeFellowCompleteMember")<CR><C-X><C-O><C-P>
+autocmd FileType scala imap <buffer> <C-S-SPACE> <C-O>:call setbufvar(bufnr(bufname("%")), "&omnifunc", "CodeFellowCompleteType")<CR><C-X><C-O><C-P>
 
 " Balloon type information
+" TODO Check if balloon support is available
 autocmd FileType scala setlocal ballooneval
 autocmd FileType scala setlocal balloondelay=300
 autocmd FileType scala setlocal balloonexpr=CodeFellowBalloonType()
@@ -72,26 +75,38 @@ function s:getFileName()
     return expand("%:p")
 endfunction
 
-function CodeFellowComplete(findstart, base)
+function s:getCompletionStart()
+    wa!
     let line = getline('.')
+    let i = col('.') - 1
+    while i > 0
+        let value = line[i - 1]
+        if value == '.' || value == ' '
+            return i
+        endif
+        let i -= 1
+    endwhile
+    return i
+endfunction
+
+function CodeFellowComplete(findstart, base)
+    " TODO Detect which completion type to use
+    return CodeFellowCompleteMember(a:findstart, a:base)
+endfunction
+
+function CodeFellowCompleteMember(findstart, base)
     if a:findstart
-        wa!
-        let i = col('.') - 1
-        while i > 0
-            let value = line[i - 1]
-            if value == '.' || value == ' '
-                return i
-            endif
-            let i -= 1
-        endwhile
-        return i
+        return <SID>getCompletionStart()
     else
+        " Reset omnifunc to default
+        call setbufvar(bufnr(bufname("%")), "&omnifunc", "CodeFellowComplete")
+
         echo "CodeFellow: Please wait..."
         " Get position in current line
         let typePos = 0
         let i = col('.') - 1
         while i > 0
-            let value = line[i]
+            let value = getline('.')[i]
             if value != ' '
                 let typePos = i - 1
                 break
@@ -103,7 +118,6 @@ function CodeFellowComplete(findstart, base)
         let typePos += <SID>getCurrentLineOffset()
 
         let result = <SID>SendMessage("CompleteMember", expand("%:p"), typePos, a:base)
-        "let result = <SID>SendMessage("CompleteScope", expand("%:p"), typePos, a:base)
 
         let res = []
         for entryLine in split(result, "\n")
@@ -116,8 +130,7 @@ function CodeFellowComplete(findstart, base)
 endfunction
 
 function CodeFellowBalloonType()
-    let bufno = bufnr(bufname("%"))
-    let bufmod = getbufvar(bufno, "&mod")
+    let bufmod = getbufvar(bufnr(bufname("%")), "&mod")
     if bufmod == 1
         return "Save buffer to get type information"
     else
@@ -129,4 +142,5 @@ endfunction
 function CodeFellowReloadFile()
     return <SID>SendMessage("ReloadFile", <SID>getFileName())
 endfunction
+
 
