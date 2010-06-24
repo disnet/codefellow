@@ -10,6 +10,7 @@ let loaded_codefellow=1
 autocmd FileType scala setlocal omnifunc=CodeFellowComplete
 autocmd FileType scala imap <buffer> <C-SPACE> <C-O>:call setbufvar(bufnr(bufname("%")), "&omnifunc", "CodeFellowCompleteMember")<CR><C-X><C-O><C-P>
 autocmd FileType scala imap <buffer> <C-S-SPACE> <C-O>:call setbufvar(bufnr(bufname("%")), "&omnifunc", "CodeFellowCompleteType")<CR><C-X><C-O><C-P>
+autocmd FileType scala map <buffer> <F1> :call CodeFellowPrintTypeInfo()<CR>
 
 " Balloon type information
 " TODO Check if balloon support is available
@@ -69,6 +70,10 @@ function s:getCurrentLineOffset()
         let index += len(l) + 1
     endfor
     return index
+endfunction
+
+function s:getCursorOffset()
+    return <SID>getCurrentLineOffset() + col('.')
 endfunction
 
 function s:getFileName()
@@ -136,6 +141,15 @@ function CodeFellowBalloonType()
     else
         let result = <SID>SendMessage("TypeInfo", <SID>getFileName(), <SID>getMousePointerOffset())
         return result
+    endif
+endfunction
+
+function CodeFellowPrintTypeInfo()
+    let bufmod = getbufvar(bufnr(bufname("%")), "&mod")
+    if bufmod == 1
+        echo "Save buffer to get type information"
+    else
+        echo <SID>SendMessage("TypeInfo", <SID>getFileName(), <SID>getCursorOffset())
     endif
 endfunction
 
