@@ -161,9 +161,6 @@ class InteractiveCompiler(settings: Settings, reporter: PresentationReporter) ex
 
   def completeMember(file: String, cursor: Int, prefix: String): List[String] = {
     println("COMPILER: complete member")
-
-    //reloadFiles(List(file))
-
     val x = new Response[List[Member]]
     val p = new OffsetPosition(getSourceFile(file), cursor)
     askTypeCompletion(p, x)
@@ -185,9 +182,6 @@ class InteractiveCompiler(settings: Settings, reporter: PresentationReporter) ex
 
   def completeScope(file: String, cursor: Int, prefix: String): List[String] = {
     println("COMPILER: complete scope")
-
-    //reloadFiles(List(file))
-
     val x = new Response[List[Member]]
     val p = new OffsetPosition(getSourceFile(file), cursor)
     askScopeCompletion(p, x)
@@ -212,19 +206,10 @@ class InteractiveCompiler(settings: Settings, reporter: PresentationReporter) ex
     val x = new Response[Tree]()
     val p = new OffsetPosition(getSourceFile(file), cursor)
 
-    //askType(getSourceFile(file), false, x)
-    //println(x.get)
-
     askTypeAt(p, x)
     val result = x.get match {
-      case Left(tree) =>
-        typeOfTree(tree)
-
-      case Right(e:FatalError) =>
-        "FATAL ERROR"
-
-      case Right(e) =>
-        "UNKNOWN"
+      case Left(tree) => typeOfTree(tree)
+      case Right(e) => "UNKNOWN"
     }
     List(result)
   }
@@ -233,28 +218,16 @@ class InteractiveCompiler(settings: Settings, reporter: PresentationReporter) ex
     var tree = t
     println("Class of tree: " + tree.getClass)
     tree = tree match {
-      case Select(qual, name) if tree.tpe == ErrorType =>
-      {
-        qual
-      }
-      case t:ImplDef if t.impl != null =>
-      {
-        t.impl
-      }
-      case t:ValOrDefDef if t.tpt != null =>
-      {
-        t.tpt
-      }
-      case t:ValOrDefDef if t.rhs != null =>
-      {
-        t.rhs
-      }
+      case Select(qual, name) if tree.tpe == ErrorType => qual
+      case t: ImplDef if t.impl != null => t.impl
+      case t: ValOrDefDef if t.tpt != null => t.tpt
+      case t: ValOrDefDef if t.rhs != null => t.rhs
       case t => t
     }
     if(tree.tpe != null) {
       tree.tpe.toString
     } else {
-      "UNKNOWN"
+      "Could not determine type"
     }
   }
 

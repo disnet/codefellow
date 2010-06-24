@@ -8,8 +8,8 @@ let loaded_codefellow=1
 
 " OmniCompletion
 autocmd FileType scala setlocal omnifunc=CodeFellowComplete
-autocmd FileType scala imap <buffer> <C-SPACE> <C-O>:call setbufvar(bufnr(bufname("%")), "&omnifunc", "CodeFellowCompleteMember")<CR><C-X><C-O><C-P>
-autocmd FileType scala imap <buffer> <C-S-SPACE> <C-O>:call setbufvar(bufnr(bufname("%")), "&omnifunc", "CodeFellowCompleteType")<CR><C-X><C-O><C-P>
+autocmd FileType scala imap <buffer> <C-SPACE> <C-O>:call setbufvar(bufnr(bufname("%")), "&omnifunc", "CodeFellowCompleteMember")<CR><C-X><C-O>
+autocmd FileType scala imap <buffer> <C-S-SPACE> <C-O>:call setbufvar(bufnr(bufname("%")), "&omnifunc", "CodeFellowCompleteScope")<CR><C-X><C-O>
 autocmd FileType scala map <buffer> <F1> :call CodeFellowPrintTypeInfo()<CR>
 
 " Balloon type information
@@ -22,6 +22,9 @@ endif
 " Compilation on save
 autocmd BufWritePost *.scala call CodeFellowReloadFile()
 
+"
+" Sends a message to the CodeFellow server a return the response
+"
 function s:SendMessage(type, ...)
 python << endpython
 try:
@@ -57,6 +60,16 @@ except:
 endpython
 endfunction
 
+"
+" Returns the absolute path of the current file
+"
+function s:getFileName()
+    return expand("%:p")
+endfunction
+
+"
+" Returns the offset of the mouse pointer
+"
 function s:getMousePointerOffset()
     let index = v:beval_col
     for l in getline(1, v:beval_lnum - 1)
@@ -65,6 +78,9 @@ function s:getMousePointerOffset()
     return index
 endfunction
 
+" 
+" Returns the offset of the beginning of the current line
+"
 function s:getCurrentLineOffset()
     let index = 0
     for l in getline(1, line('.') - 1)
@@ -73,18 +89,19 @@ function s:getCurrentLineOffset()
     return index
 endfunction
 
+"
+" Returns the absolute offset of the cursor
+"
 function s:getCursorOffset()
-    return <SID>getCurrentLineOffset() + col('.')
+    return <SID>getCurrentLineOffset() + col('.') - 1
 endfunction
 
-function s:getFileName()
-    return expand("%:p")
-endfunction
-
-function s:getCompletionStart()
-    wa!
+"
+" Returns the index in the current line where the word under the cursor starts
+"
+function s:getWordUnderCursorIndex()
     let line = getline('.')
-    let i = col('.') - 1
+    let i = col('.')
     while i > 0
         let value = line[i - 1]
         if value == '.' || value == ' '
@@ -95,6 +112,26 @@ function s:getCompletionStart()
     return i
 endfunction
 
+"
+" Returns the offset where the last word before the cursor ends
+"
+function s:getWordBeforeCursorOffset()
+    let offset = 0
+    let line = getline(".")
+    let i = col('.') - 1                    " start at one character to the left
+    while i > 0
+        let value = line[i - 1]             " array is zero-based, col() is one-based
+        if value != ' '
+            let offset = i
+            break
+        endif
+        let i -= 1
+    endwhile
+    " Add all lines above
+    let offset += <SID>getCurrentLineOffset()
+    return offset - 1                       " need to go one more to left to actually 'hit' the word
+endfunction
+
 function CodeFellowComplete(findstart, base)
     " TODO Detect which completion type to use
     return CodeFellowCompleteMember(a:findstart, a:base)
@@ -102,35 +139,42 @@ endfunction
 
 function CodeFellowCompleteMember(findstart, base)
     if a:findstart
-        return <SID>getCompletionStart()
+        return <SID>getWordUnderCursorIndex()
     else
+        w!
+        echo "CodeFellow: Please wait..."
         " Reset omnifunc to default
         call setbufvar(bufnr(bufname("%")), "&omnifunc", "CodeFellowComplete")
 
-        echo "CodeFellow: Please wait..."
-        " Get position in current line
-        let typePos = 0
-        let i = col('.') - 1
-        while i > 0
-            let value = getline('.')[i]
-            if value != ' '
-                let typePos = i - 1
-                break
-            endif
-            let i -= 1
-        endwhile
-
-        " Add all lines above
-        let typePos += <SID>getCurrentLineOffset()
-
-        let result = <SID>SendMessage("CompleteMember", expand("%:p"), typePos, a:base)
+        let offset = <SID>getWordBeforeCursorOffset()
+        let result = <SID>SendMessage("CompleteMember", expand("%:p"), offset, a:base)
 
         let res = []
         for entryLine in split(result, "\n")
             let entry = split(entryLine, ";")
             call add(res, {'word': entry[0], 'abbr': entry[0] . entry[1], 'icase': 0})
         endfor
+        return res
+    endif
+endfunction
 
+function CodeFellowCompleteScope(findstart, base)
+    if a:findstart
+        return <SID>getWordUnderCursorIndex()
+    else
+        w!
+        echo "CodeFellow: Please wait..."
+        " Reset omnifunc to default
+        call setbufvar(bufnr(bufname("%")), "&omnifunc", "CodeFellowComplete")
+
+        let offset = <SID>getWordBeforeCursorOffset()
+        let result = <SID>SendMessage("CompleteScope", expand("%:p"), offset, a:base)
+
+        let res = []
+        for entryLine in split(result, "\n")
+            let entry = split(entryLine, ";")
+            call add(res, {'word': entry[0], 'abbr': entry[0] . " (" . entry[1] . ")", 'icase': 0})
+        endfor
         return res
     endif
 endfunction
