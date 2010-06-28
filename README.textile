@@ -8,6 +8,7 @@ h2. Features
 The following features are already implemented in Vim:
 
 * Member completion 
+* Scope completion 
 * Get type information for expressions
 
 Planned:
