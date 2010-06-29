@@ -58,7 +58,13 @@ bc. java -cp    <codefellow_dir>>/project/boot/scala-2.8.0.RC5/lib/scala-library
 
 h2. Usage
 
-TBD
+The following key bindings are available:
+
+|Ctrl+S Ctrl+m | Activate member completion function and trigger omni completion |
+|Ctrl+S Ctrl+s | Activate scope completion function and trigger omni completion |
+|Ctrl+S Ctrl+t | Print type information of expression under cursor |
+
+Please not that the completion function will trigger a buffer save.
 
 h2. Screencast
 
@@ -68,5 +74,3 @@ h2. Acknowledgement
 
 * Almost all functionality for the code completion is already implemented in the Scala compiler. CodeFellow would not be possible without the work of the Scala compiler team!
 * I learned most about the Scala compiler by looking at and using the source code from "aemoncannon's":http://github.com/aemoncannon emacs mode "ensime":http://github.com/aemoncannon/ensime. Thank you!
-
-

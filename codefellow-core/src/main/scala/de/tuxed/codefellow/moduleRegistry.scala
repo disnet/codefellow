@@ -19,7 +19,7 @@ import scala.tools.nsc.symtab.Types
 import scala.tools.nsc.symtab.Flags
 
 
-case class Request(moduleIdentifierFile: String, message: Message)
+case class Request(moduleIdentifierFile: String, message: AnyRef)
 
 class ModuleRegistry(modules: List[Module]) extends Actor {
 

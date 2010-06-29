@@ -72,9 +72,9 @@ class VimHandler(moduleRegistry: ModuleRegistry) {
         val arguments = map("arguments").asInstanceOf[List[Any]]
 
         // Create Message instance
-        val packageName = classOf[Message].getPackage.getName
+        val packageName = classOf[Module].getPackage.getName
         val fqcn = packageName + "." + messageType
-        val clazz = classOf[Message].getClassLoader.loadClass(fqcn)
+        val clazz = classOf[Module].getClassLoader.loadClass(fqcn)
         val constructor = clazz.getDeclaredConstructors()(0)
         val parameterTypes = constructor.getParameterTypes
         val params = arguments.padTo(parameterTypes.size, "")
@@ -86,7 +86,7 @@ class VimHandler(moduleRegistry: ModuleRegistry) {
         }
       
         // Create instance
-        val m = constructor.newInstance(typedParams.asInstanceOf[List[AnyRef]]: _*).asInstanceOf[Message]
+        val m = constructor.newInstance(typedParams.asInstanceOf[List[AnyRef]]: _*).asInstanceOf[AnyRef]
         Some(Request(moduleIdentifierFile, m))
       }
     }

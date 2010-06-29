@@ -20,5 +20,15 @@ object Utils {
     }
   }
 
+  def getLineInFileThatContainsOffset(file: String, offset: Int): Option[String] = {
+    val lines = io.Source.fromFile(file).getLines()
+    var counted = 0
+    for (line <- lines) {
+      counted += line.size + 1
+      if (counted >= offset) return Some(line)
+    }
+    None
+  }
+
 }
 

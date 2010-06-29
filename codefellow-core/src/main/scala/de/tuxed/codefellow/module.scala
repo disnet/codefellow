@@ -19,14 +19,14 @@ import scala.tools.nsc.symtab.Types
 import scala.tools.nsc.symtab.Flags
 
 
-sealed class Message
-case object StartCompiler extends Message
-case object Shutdown extends Message
-case object ReloadAllFiles extends Message
-case class ReloadFile(file: String) extends Message
-case class CompleteMember(file: String, pos: Int, prefix: String) extends Message
-case class CompleteScope(file: String, pos: Int, prefix: String) extends Message
-case class TypeInfo(file: String, pos: Int) extends Message
+case object StartCompiler
+case object Shutdown
+case object ReloadAllFiles
+case class ReloadFile(file: String)
+case class CompleteMember(file: String, pos: Int, prefix: String)
+case class CompleteScope(file: String, pos: Int, prefix: String)
+case class CompleteSmart(file: String, pos: Int, prefix: String)
+case class TypeInfo(file: String, pos: Int)
 
 class Module(val name: String, val path: String, scalaSourceDirs: Seq[String], classpath: Seq[String]) extends Actor {
     
@@ -76,6 +76,17 @@ class Module(val name: String, val path: String, scalaSourceDirs: Seq[String], c
     case CompleteScope(file, pos, prefix) => {
       startCompiler()
       sender ! compiler.completeScope(file, pos, prefix)
+    }
+
+    case CompleteSmart(file, pos, prefix) => {
+      startCompiler()
+
+      val line = Utils.getLineInFileThatContainsOffset(file, pos).getOrElse("").trim
+      if (line == "" || line.endsWith("(") || line.endsWith(",") || line.endsWith("=>") || line.endsWith(";")) {
+        sender ! compiler.completeScope(file, pos, prefix)
+      } else {
+        sender ! compiler.completeMember(file, pos, prefix)
+      }
     }
 
     case TypeInfo(file, pos) => {

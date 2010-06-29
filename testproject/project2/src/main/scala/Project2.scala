@@ -2,14 +2,13 @@ package de.tuxed.codefellow.testproject2
 
 
 object Project2 {
-
   var name = "Roman"
 
   def test1(arg: String) = {
     arg.substring(1) 
     val number = 1
 
-    arg
+    1
   }
 
   def test2() {

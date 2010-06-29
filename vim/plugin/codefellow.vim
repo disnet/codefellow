@@ -8,8 +8,10 @@ let loaded_codefellow=1
 
 " OmniCompletion
 autocmd FileType scala setlocal omnifunc=CodeFellowComplete
-autocmd FileType scala imap <buffer> <C-SPACE> <C-O>:call CodeFellowTriggerCompleteMember()<CR>
-autocmd FileType scala imap <buffer> <C-S-SPACE> <C-O>:call CodeFellowTriggerCompleteScope()<CR>
+autocmd FileType scala imap <buffer> <C-s><C-m> <C-O>:call CodeFellowTriggerCompleteMember()<CR>
+autocmd FileType scala imap <buffer> <C-s><C-s> <C-O>:call CodeFellowTriggerCompleteScope()<CR>
+autocmd FileType scala imap <buffer> <C-s><C-n> <C-O>:call CodeFellowTriggerCompleteSmart()<CR>
+autocmd FileType scala imap <buffer> <C-s><C-t> <C-O>:call CodeFellowPrintTypeInfo()<CR>
 autocmd FileType scala map <buffer> <F1> :call CodeFellowPrintTypeInfo()<CR>
 
 " Balloon type information
@@ -179,6 +181,32 @@ function CodeFellowCompleteScope(findstart, base)
 
         let offset = <SID>getWordBeforeCursorOffset()
         let result = <SID>SendMessage("CompleteScope", expand("%:p"), offset, a:base)
+
+        let res = []
+        for entryLine in split(result, "\n")
+            let entry = split(entryLine, ";")
+            call add(res, {'word': entry[0], 'abbr': entry[0] . " (" . entry[1] . ")", 'icase': 0})
+        endfor
+        return res
+    endif
+endfunction
+
+function CodeFellowTriggerCompleteSmart()
+    call setbufvar(bufnr(bufname("%")), "&omnifunc", "CodeFellowCompleteSmart")
+    call feedkeys("\<C-X>\<C-O>", "n")
+endfunction
+
+function CodeFellowCompleteSmart(findstart, base)
+    if a:findstart
+        return <SID>getWordUnderCursorIndex()
+    else
+        w!
+        echo "CodeFellow: Please wait..."
+        " Reset omnifunc to default
+        call setbufvar(bufnr(bufname("%")), "&omnifunc", "CodeFellowComplete")
+
+        let offset = <SID>getWordBeforeCursorOffset()
+        let result = <SID>SendMessage("CompleteSmart", expand("%:p"), offset, a:base)
 
         let res = []
         for entryLine in split(result, "\n")
