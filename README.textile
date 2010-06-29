@@ -58,6 +58,8 @@ bc. java -cp <codefellow_dir>>/project/boot/scala-2.8.0.RC5/lib/scala-library.ja
 
 h2. Usage
 
+*Note:* The first invocation of a CodeFellow feature might take a couple of seconds since the compiler daemon for each module in your build will be started on demand.
+
 The following key bindings are available:
 
 |Ctrl+s Ctrl+m | Activate member completion function and trigger omni completion |
