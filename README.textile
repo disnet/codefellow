@@ -16,6 +16,14 @@ Planned:
 
 * Too many :-)
 
+Planned (is this possible?)
+* jump to definition
+* fast syntax check (maybe on buf write?)
+* use stdin/out for communication instead of TCP/IP and start daemon
+  automatically
+* think about when ( should be appended
+* camelCase completion ? gC -> getClass
+
 h2. Installation
 
 1. Build CodeFellow
