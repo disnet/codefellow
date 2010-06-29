@@ -6,13 +6,27 @@ if exists("loaded_codefellow")
 endif
 let loaded_codefellow=1
 
+
+" filetype
+augroup scala
+  au BufRead,BufNewFile *.scala set filetype=scala
+augroup end
+
 " OmniCompletion
 autocmd FileType scala setlocal omnifunc=CodeFellowComplete
-autocmd FileType scala inoremap <buffer> <C-s><C-m> <C-O>:call CodeFellowTriggerCompleteMember()<CR>
-autocmd FileType scala inoremap <buffer> <C-s><C-s> <C-O>:call CodeFellowTriggerCompleteScope()<CR>
-autocmd FileType scala inoremap <buffer> <C-s><C-n> <C-O>:call CodeFellowTriggerCompleteSmart()<CR>
-autocmd FileType scala inoremap <buffer> <C-s><C-t> <C-O>:call CodeFellowPrintTypeInfo()<CR>
-autocmd FileType scala noremap <buffer> <F1> :call CodeFellowPrintTypeInfo()<CR>
+
+if !exists('g:codefellow_no_default_mappings')
+  " default completion: (<c-s> will not work in console Vim !):
+  " note the noremap which will not cause an infinite loop
+  autocmd FileType scala inoremap <buffer> <C-x><C-o> <C-O>:set omnifunc=CodeFellowComplete<CR><c-x><c-o>
+
+  " special mappings calling special completion functions
+  autocmd FileType scala inoremap <buffer> <C-s><C-m> <C-O>:set omnifunc=CodeFellowCompleteMember<CR><c-x><c-o>
+  autocmd FileType scala inoremap <buffer> <C-s><C-s> <C-O>:set omnifunc=CodeFellowCompleteScope<CR><c-x><c-o>
+  autocmd FileType scala inoremap <buffer> <C-s><C-n> <C-O>:set omnifunc=CodeFellowCompleteSmart<CR><c-x><c-o>
+  autocmd FileType scala noremap <buffer> <C-s><C-t> <esc>:<c-u>call CodeFellowPrintTypeInfo()<CR>
+  autocmd FileType scala noremap <buffer> <F1> :call CodeFellowPrintTypeInfo()<CR>
+endif
 
 " Balloon type information
 if has("balloon_eval")
@@ -139,19 +153,12 @@ function CodeFellowComplete(findstart, base)
     return CodeFellowCompleteMember(a:findstart, a:base)
 endfunction
 
-function CodeFellowTriggerCompleteMember()
-    call setbufvar(bufnr(bufname("%")), "&omnifunc", "CodeFellowCompleteMember")
-    call feedkeys("\<C-X>\<C-O>", "n")
-endfunction
-
 function CodeFellowCompleteMember(findstart, base)
     if a:findstart
         return <SID>getWordUnderCursorIndex()
     else
         w!
         echo "CodeFellow: Please wait..."
-        " Reset omnifunc to default
-        call setbufvar(bufnr(bufname("%")), "&omnifunc", "CodeFellowComplete")
 
         let offset = <SID>getWordBeforeCursorOffset()
         let result = <SID>SendMessage("CompleteMember", expand("%:p"), offset, a:base)
@@ -165,19 +172,12 @@ function CodeFellowCompleteMember(findstart, base)
     endif
 endfunction
 
-function CodeFellowTriggerCompleteScope()
-    call setbufvar(bufnr(bufname("%")), "&omnifunc", "CodeFellowCompleteScope")
-    call feedkeys("\<C-X>\<C-O>", "n")
-endfunction
-
 function CodeFellowCompleteScope(findstart, base)
     if a:findstart
         return <SID>getWordUnderCursorIndex()
     else
         w!
         echo "CodeFellow: Please wait..."
-        " Reset omnifunc to default
-        call setbufvar(bufnr(bufname("%")), "&omnifunc", "CodeFellowComplete")
 
         let offset = <SID>getWordBeforeCursorOffset()
         let result = <SID>SendMessage("CompleteScope", expand("%:p"), offset, a:base)
@@ -191,19 +191,12 @@ function CodeFellowCompleteScope(findstart, base)
     endif
 endfunction
 
-function CodeFellowTriggerCompleteSmart()
-    call setbufvar(bufnr(bufname("%")), "&omnifunc", "CodeFellowCompleteSmart")
-    call feedkeys("\<C-X>\<C-O>", "n")
-endfunction
-
 function CodeFellowCompleteSmart(findstart, base)
     if a:findstart
         return <SID>getWordUnderCursorIndex()
     else
         w!
         echo "CodeFellow: Please wait..."
-        " Reset omnifunc to default
-        call setbufvar(bufnr(bufname("%")), "&omnifunc", "CodeFellowComplete")
 
         let offset = <SID>getWordBeforeCursorOffset()
         let result = <SID>SendMessage("CompleteSmart", expand("%:p"), offset, a:base)
