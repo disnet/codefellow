@@ -13,6 +13,8 @@ try:
     for i in range(1, argsSize + 1):
         args.append(vim.eval("a:" + str(i)))
 
+    # if there is a case where you need proper quoting consider using 
+    # http://github.com/MarcWeber/scion-backend-vim/blob/devel-vim/autoload/json.vim
     msg = "{"
     msg += '"moduleIdentifierFile": "' + vim.eval('expand("%:p")') + '",'
     msg += '"message": "' + vim.eval("a:type") + '",'
@@ -21,6 +23,7 @@ try:
     msg += "\nENDREQUEST\n"
     s.sendall(msg)
 
+    # read until server closes connection
     data = ""
     while 1:
         tmp = s.recv(1024)
