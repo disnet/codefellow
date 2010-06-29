@@ -62,11 +62,10 @@ h2. Usage
 
 The following key bindings are available:
 
-|Ctrl+s Ctrl+m | Activate member completion function and trigger omni completion |
-|Ctrl+s Ctrl+s | Activate scope completion function and trigger omni completion |
-|Ctrl+s Ctrl+t | Print type information of expression under cursor |
-
-Please not that the completion function will trigger a buffer save.
+|_. Key |_. Mode |_. Description |
+|Ctrl+s Ctrl+m | insert mode | Activate member completion function and trigger omni completion (triggers buffer save) |
+|Ctrl+s Ctrl+s | insert mode | Activate scope completion function and trigger omni completion (triggers buffer save) |
+|Ctrl+s Ctrl+t | command mode | Print type information of expression under cursor |
 
 h2. Screencast
 
