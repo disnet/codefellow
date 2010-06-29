@@ -28,14 +28,14 @@ sbt update publish-local
 
 bc. cp <<codefellow_dir>>/vim/plugin/codefellow.vim ~/.vim/plugin/
 
-3. Add the CodeFellow plugin to your project (project/plugins/Plugins.scala):
+3. Add the CodeFellow plugin to your project (project/plugins/Plugins.scala)
 
 bc. import sbt._
 class Plugins(info: ProjectInfo) extends PluginDefinition(info) {
   val a = "de.tuxed" % "codefellow-plugin" % "0.1"
 }
 
-4. Mixin the CodeFellow trait to your project definition:
+4. Mixin the CodeFellow trait to your project definition
 
 bc. class YourProject(info: ProjectInfo)
 extends ParentProject(info)
@@ -47,7 +47,7 @@ with de.tuxed.codefellow.plugin.CodeFellowPlugin {
 
 bc. sbt codefellow
 
-6. Start the CodeFellow deamon from your project root directory (this step will get merged with the above one in the future):
+6. Start the CodeFellow deamon from your project root directory (this step will get merged with the above one in the future)
 
 bc. java -cp <codefellow_dir>>/project/boot/scala-2.8.0.RC5/lib/scala-library.jar:\
          <codefellow_dir>>/project/boot/scala-2.8.0.RC5/lib/scala-compiler.jar:\
@@ -60,9 +60,9 @@ h2. Usage
 
 The following key bindings are available:
 
-|Ctrl+S Ctrl+m | Activate member completion function and trigger omni completion |
-|Ctrl+S Ctrl+s | Activate scope completion function and trigger omni completion |
-|Ctrl+S Ctrl+t | Print type information of expression under cursor |
+|Ctrl+s Ctrl+m | Activate member completion function and trigger omni completion |
+|Ctrl+s Ctrl+s | Activate scope completion function and trigger omni completion |
+|Ctrl+s Ctrl+t | Print type information of expression under cursor |
 
 Please not that the completion function will trigger a buffer save.
 
