@@ -23,6 +23,7 @@ Planned (is this possible?)
   automatically
 * think about when ( should be appended
 * camelCase completion ? gC -> getClass
+* create views for class hirarchies and relations ?
 
 h2. Installation
 
