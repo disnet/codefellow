@@ -8,11 +8,11 @@ let loaded_codefellow=1
 
 " OmniCompletion
 autocmd FileType scala setlocal omnifunc=CodeFellowComplete
-autocmd FileType scala imap <buffer> <C-s><C-m> <C-O>:call CodeFellowTriggerCompleteMember()<CR>
-autocmd FileType scala imap <buffer> <C-s><C-s> <C-O>:call CodeFellowTriggerCompleteScope()<CR>
-autocmd FileType scala imap <buffer> <C-s><C-n> <C-O>:call CodeFellowTriggerCompleteSmart()<CR>
-autocmd FileType scala imap <buffer> <C-s><C-t> <C-O>:call CodeFellowPrintTypeInfo()<CR>
-autocmd FileType scala map <buffer> <F1> :call CodeFellowPrintTypeInfo()<CR>
+autocmd FileType scala inoremap <buffer> <C-s><C-m> <C-O>:call CodeFellowTriggerCompleteMember()<CR>
+autocmd FileType scala inoremap <buffer> <C-s><C-s> <C-O>:call CodeFellowTriggerCompleteScope()<CR>
+autocmd FileType scala inoremap <buffer> <C-s><C-n> <C-O>:call CodeFellowTriggerCompleteSmart()<CR>
+autocmd FileType scala inoremap <buffer> <C-s><C-t> <C-O>:call CodeFellowPrintTypeInfo()<CR>
+autocmd FileType scala noremap <buffer> <F1> :call CodeFellowPrintTypeInfo()<CR>
 
 " Balloon type information
 if has("balloon_eval")
