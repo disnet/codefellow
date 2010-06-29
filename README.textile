@@ -50,9 +50,9 @@ bc. sbt codefellow
 6. Start the CodeFellow deamon from your project root directory (this step will get merged with the above one in the future):
 
 bc. java -cp <codefellow_dir>>/project/boot/scala-2.8.0.RC5/lib/scala-library.jar:\
-               <codefellow_dir>>/project/boot/scala-2.8.0.RC5/lib/scala-compiler.jar:\
-               <codefellow_dir>>/codefellow-core/target/scala_2.8.0.RC5/classes \
-               de.tuxed.codefellow.Launch
+         <codefellow_dir>>/project/boot/scala-2.8.0.RC5/lib/scala-compiler.jar:\
+         <codefellow_dir>>/codefellow-core/target/scala_2.8.0.RC5/classes \
+         de.tuxed.codefellow.Launch
 
 7. Start Vim and open a Scala file that belongs to your project
 
