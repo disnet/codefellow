@@ -24,13 +24,14 @@ case class Request(moduleIdentifierFile: String, message: AnyRef)
 class ModuleRegistry(modules: List[Module]) extends Actor {
 
   def act {
-    modules foreach { _.start }
-    //modules foreach { _ ! StartCompiler } // TODO: Defer to improve startup time?
+    modules foreach { m =>
+      println("Module: " + m.name + " in directory: " + m.path)
+      m.start
+    }
     loop {
       try {
         receive {
           case Request(moduleIdentifierFile, message) => {
-            // TODO Check if a module was found
             val selected = modules.filter(m => moduleIdentifierFile.startsWith(m.path))
             if (selected.size != 0) {
               val result = selected(0) !? message
