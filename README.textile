@@ -22,7 +22,7 @@ h2. Installation
 
 bc. git clone git://github.com/romanroe/codefellow.git
 cd codefellow
-sbt publish-local
+sbt update publish-local
 
 2. Install the Vim plugin
 
