@@ -10,9 +10,8 @@ let loaded_codefellow=1
 autocmd FileType scala setlocal omnifunc=CodeFellowComplete
 autocmd FileType scala inoremap <buffer> <C-s><C-m> <C-O>:call CodeFellowTriggerCompleteMember()<CR>
 autocmd FileType scala inoremap <buffer> <C-s><C-s> <C-O>:call CodeFellowTriggerCompleteScope()<CR>
-autocmd FileType scala inoremap <buffer> <C-s><C-n> <C-O>:call CodeFellowTriggerCompleteSmart()<CR>
-autocmd FileType scala inoremap <buffer> <C-s><C-t> <C-O>:call CodeFellowPrintTypeInfo()<CR>
-autocmd FileType scala noremap <buffer> <F1> :call CodeFellowPrintTypeInfo()<CR>
+"autocmd FileType scala inoremap <buffer> <C-s><C-n> <C-O>:call CodeFellowTriggerCompleteSmart()<CR>
+autocmd FileType scala noremap <buffer> <C-s><C-t> :call CodeFellowPrintTypeInfo()<CR>
 
 " Balloon type information
 if has("balloon_eval")
@@ -25,7 +24,7 @@ endif
 autocmd BufWritePost *.scala call CodeFellowReloadFile()
 
 "
-" Sends a message to the CodeFellow server a return the response
+" Sends a message to the CodeFellow server and return the response
 "
 function s:SendMessage(type, ...)
 python << endpython
@@ -70,35 +69,6 @@ function s:getFileName()
 endfunction
 
 "
-" Returns the offset of the mouse pointer
-"
-function s:getMousePointerOffset()
-    let index = v:beval_col
-    for l in getline(1, v:beval_lnum - 1)
-        let index += len(l) + 1
-    endfor
-    return index
-endfunction
-
-" 
-" Returns the offset of the beginning of the current line
-"
-function s:getCurrentLineOffset()
-    let index = 0
-    for l in getline(1, line('.') - 1)
-        let index += len(l) + 1
-    endfor
-    return index
-endfunction
-
-"
-" Returns the absolute offset of the cursor
-"
-function s:getCursorOffset()
-    return <SID>getCurrentLineOffset() + col('.')
-endfunction
-
-"
 " Returns the index in the current line where the word under the cursor starts
 "
 function s:getWordUnderCursorIndex()
@@ -106,32 +76,12 @@ function s:getWordUnderCursorIndex()
     let i = col('.')
     while i > 0
         let value = line[i - 1]
-        if value == '.' || value == ' '
+        if value == '.' || value == ' ' " TODO: Improve check, e.g. for '(' ')' ';'
             return i
         endif
         let i -= 1
     endwhile
     return i
-endfunction
-
-"
-" Returns the offset where the last word before the cursor ends
-"
-function s:getWordBeforeCursorOffset()
-    let offset = 0
-    let line = getline(".")
-    let i = col('.') - 1                    " start at one character to the left
-    while i > 0
-        let value = line[i - 1]             " array is zero-based, col() is one-based
-        if value != ' '
-            let offset = i
-            break
-        endif
-        let i -= 1
-    endwhile
-    " Add all lines above
-    let offset += <SID>getCurrentLineOffset()
-    return offset - 1                       " need to go one more to left to actually 'hit' the word
 endfunction
 
 function CodeFellowComplete(findstart, base)
@@ -153,9 +103,7 @@ function CodeFellowCompleteMember(findstart, base)
         " Reset omnifunc to default
         call setbufvar(bufnr(bufname("%")), "&omnifunc", "CodeFellowComplete")
 
-        let offset = <SID>getWordBeforeCursorOffset()
-        let result = <SID>SendMessage("CompleteMember", expand("%:p"), offset, a:base)
-
+        let result = <SID>SendMessage("CompleteMember", <SID>getFileName(), line(".") - 1, col("."), a:base)
         let res = []
         for entryLine in split(result, "\n")
             let entry = split(entryLine, ";")
@@ -179,9 +127,7 @@ function CodeFellowCompleteScope(findstart, base)
         " Reset omnifunc to default
         call setbufvar(bufnr(bufname("%")), "&omnifunc", "CodeFellowComplete")
 
-        let offset = <SID>getWordBeforeCursorOffset()
-        let result = <SID>SendMessage("CompleteScope", expand("%:p"), offset, a:base)
-
+        let result = <SID>SendMessage("CompleteScope", <SID>getFileName(), line(".") - 1, col("."), a:base)
         let res = []
         for entryLine in split(result, "\n")
             let entry = split(entryLine, ";")
@@ -196,33 +142,33 @@ function CodeFellowTriggerCompleteSmart()
     call feedkeys("\<C-X>\<C-O>", "n")
 endfunction
 
-function CodeFellowCompleteSmart(findstart, base)
-    if a:findstart
-        return <SID>getWordUnderCursorIndex()
-    else
-        w!
-        echo "CodeFellow: Please wait..."
-        " Reset omnifunc to default
-        call setbufvar(bufnr(bufname("%")), "&omnifunc", "CodeFellowComplete")
-
-        let offset = <SID>getWordBeforeCursorOffset()
-        let result = <SID>SendMessage("CompleteSmart", expand("%:p"), offset, a:base)
-
-        let res = []
-        for entryLine in split(result, "\n")
-            let entry = split(entryLine, ";")
-            call add(res, {'word': entry[0], 'abbr': entry[0] . " (" . entry[1] . ")", 'icase': 0})
-        endfor
-        return res
-    endif
-endfunction
+"function CodeFellowCompleteSmart(findstart, base)
+    "if a:findstart
+        "return <SID>getWordUnderCursorIndex()
+    "else
+        "w!
+        "echo "CodeFellow: Please wait..."
+        "" Reset omnifunc to default
+        "call setbufvar(bufnr(bufname("%")), "&omnifunc", "CodeFellowComplete")
+"
+        "let offset = <SID>getWordBeforeCursorOffset()
+        "let result = <SID>SendMessage("CompleteSmart", expand("%:p"), offset, a:base)
+"
+        "let res = []
+        "for entryLine in split(result, "\n")
+            "let entry = split(entryLine, ";")
+            "call add(res, {'word': entry[0], 'abbr': entry[0] . " (" . entry[1] . ")", 'icase': 0})
+        "endfor
+        "return res
+    "endif
+"endfunction
 
 function CodeFellowBalloonType()
     let bufmod = getbufvar(bufnr(bufname("%")), "&mod")
     if bufmod == 1
         return "Save buffer to get type information"
     else
-        let result = <SID>SendMessage("TypeInfo", <SID>getFileName(), <SID>getMousePointerOffset())
+        let result = <SID>SendMessage("TypeInfo", <SID>getFileName(), v:beval_lnum - 1, v:beval_col)
         return result
     endif
 endfunction
@@ -232,7 +178,7 @@ function CodeFellowPrintTypeInfo()
     if bufmod == 1
         echo "Save buffer to get type information"
     else
-        echo <SID>SendMessage("TypeInfo", <SID>getFileName(), <SID>getCursorOffset())
+        echo <SID>SendMessage("TypeInfo", <SID>getFileName(), line(".") - 1, col("."))
     endif
 endfunction
 

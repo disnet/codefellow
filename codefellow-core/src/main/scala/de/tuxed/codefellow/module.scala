@@ -23,10 +23,10 @@ case object StartCompiler
 case object Shutdown
 case object ReloadAllFiles
 case class ReloadFile(file: String)
-case class CompleteMember(file: String, pos: Int, prefix: String)
-case class CompleteScope(file: String, pos: Int, prefix: String)
-case class CompleteSmart(file: String, pos: Int, prefix: String)
-case class TypeInfo(file: String, pos: Int)
+case class CompleteMember(file: String, row: Int, column: Int, prefix: String)
+case class CompleteScope(file: String, row: Int, column: Int, prefix: String)
+//case class CompleteSmart(file: String, row: Int, column: Int, prefix: String)
+case class TypeInfo(file: String, row: Int, column: Int)
 
 class Module(val name: String, val path: String, scalaSourceDirs: Seq[String], classpath: Seq[String]) extends Actor {
     
@@ -68,17 +68,18 @@ class Module(val name: String, val path: String, scalaSourceDirs: Seq[String], c
       compiler.reloadFiles(List(file))
     }
 
-    case CompleteMember(file, pos, prefix) => {
+    case CompleteMember(file, row, column, prefix) => {
       startCompiler()
-      sender ! compiler.completeMember(file, pos, prefix)
+      sender ! compiler.completeMember(file, row, column, prefix)
     }
 
-    case CompleteScope(file, pos, prefix) => {
+    case CompleteScope(file, row, column, prefix) => {
       startCompiler()
-      sender ! compiler.completeScope(file, pos, prefix)
+      sender ! compiler.completeScope(file, row, column, prefix)
     }
 
-    case CompleteSmart(file, pos, prefix) => {
+    /*
+    case CompleteSmart(file, row, column, prefix) => {
       startCompiler()
 
       val line = Utils.getLineInFileThatContainsOffset(file, pos).getOrElse("").trim
@@ -88,10 +89,11 @@ class Module(val name: String, val path: String, scalaSourceDirs: Seq[String], c
         sender ! compiler.completeMember(file, pos, prefix)
       }
     }
+    */
 
-    case TypeInfo(file, pos) => {
+    case TypeInfo(file, row, column) => {
       startCompiler()
-      sender ! compiler.typeInfo(file, pos)
+      sender ! compiler.typeInfo(file, row, column)
     }
   }
 
@@ -170,10 +172,14 @@ class InteractiveCompiler(settings: Settings, reporter: PresentationReporter) ex
     List("files reloaded")
   }
 
-  def completeMember(file: String, cursor: Int, prefix: String): List[String] = {
+  def completeMember(file: String, row: Int, column: Int, prefix: String): List[String] = {
     println("COMPILER: complete member")
+
+    val lines = Utils.getLinesFromFilePath(file)
+    val offset = Utils.getWordBeforeCursorOffset(lines, row, column)
+
+    val p = new OffsetPosition(getSourceFile(file), offset)
     val x = new Response[List[Member]]
-    val p = new OffsetPosition(getSourceFile(file), cursor)
     askTypeCompletion(p, x)
 
     val names = x.get match {
@@ -191,10 +197,14 @@ class InteractiveCompiler(settings: Settings, reporter: PresentationReporter) ex
     filtered map { case TypeMember(sym, tpe, true, viaImport, viaView) => sym.nameString + ";" + tpe }
   }
 
-  def completeScope(file: String, cursor: Int, prefix: String): List[String] = {
+  def completeScope(file: String, row: Int, column: Int, prefix: String): List[String] = {
     println("COMPILER: complete scope")
+
+    val lines = Utils.getLinesFromFilePath(file)
+    val offset = Utils.getWordBeforeCursorOffset(lines, row, column)
+
+    val p = new OffsetPosition(getSourceFile(file), offset)
     val x = new Response[List[Member]]
-    val p = new OffsetPosition(getSourceFile(file), cursor)
     askScopeCompletion(p, x)
 
     val names = x.get match {
@@ -212,11 +222,14 @@ class InteractiveCompiler(settings: Settings, reporter: PresentationReporter) ex
     filtered map { case ScopeMember(sym, tpe, true, viaImport) => sym.nameString + ";" + viaImport }
   }
 
-  def typeInfo(file: String, cursor: Int) = {
+  def typeInfo(file: String, row: Int, column: Int) = {
     println("COMPILER: typeinfo")
-    val x = new Response[Tree]()
-    val p = new OffsetPosition(getSourceFile(file), cursor)
 
+    val lines = Utils.getLinesFromFilePath(file)
+    val offset = Utils.getCursorOffset(lines, row, column)
+
+    val p = new OffsetPosition(getSourceFile(file), offset)
+    val x = new Response[Tree]()
     askTypeAt(p, x)
     val result = x.get match {
       case Left(tree) => typeOfTree(tree)
