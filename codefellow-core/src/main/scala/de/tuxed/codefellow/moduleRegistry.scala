@@ -26,7 +26,7 @@ class ModuleRegistry(modules: List[Module]) extends Actor {
   def act {
     modules foreach { m =>
       println("Module: " + m.name + " in directory: " + m.path)
-      m.start
+      m.start()
     }
     loop {
       try {
