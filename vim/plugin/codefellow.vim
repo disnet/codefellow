@@ -29,6 +29,8 @@ if has("balloon_eval")
     autocmd FileType scala setlocal balloonexpr=codefellow#BalloonType()
 endif
 
-" Compilation on save
+" Hooks to sync Vim with CodeFellow daemon
+autocmd BufReadPost *.scala call codefellow#ReloadFile()
 autocmd BufWritePost *.scala call codefellow#ReloadFile()
+
 
