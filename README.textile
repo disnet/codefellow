@@ -14,16 +14,9 @@ The following features are already implemented in Vim:
 
 Planned:
 
-* Too many :-)
-
-Planned (is this possible?)
-* jump to definition
-* fast syntax check (maybe on buf write?)
-* use stdin/out for communication instead of TCP/IP and start daemon
-  automatically
-* think about when ( should be appended
-* camelCase completion ? gC -> getClass
-* create views for class hirarchies and relations ?
+* Jump to definition
+* Syntax check on buffer save
+* Automatically add '(' and ')' based on the method return type and parameters
 
 h2. Installation
 
@@ -79,6 +72,10 @@ The following key bindings are available:
 h2. Screencast
 
 Check out the "screencast":http://github.com/downloads/romanroe/codefellow/codefellow_sc_1d.avi to see CodeFellow in action!
+
+h2. Contributions
+
+Thanks a lot to "Marc Weber":http://github.com/MarcWeber and "Eric Sessoms":http://github.com/esessoms !
 
 h2. Acknowledgement
 
