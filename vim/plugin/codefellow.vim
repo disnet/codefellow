@@ -31,7 +31,8 @@ python << endpython
 import socket
 import vim
 try:
-    s = socket.create_connection(("localhost", 9081))
+    s = socket.socket()
+    s.connect(("localhost", 9081))
 
     argsSize = int(vim.eval("a:0"))
     args = []
