@@ -23,6 +23,7 @@ case object StartCompiler
 case object Shutdown
 case object ReloadAllFiles
 case class ReloadFile(file: String)
+case class CompileAllFiles(errorFile: String)
 case class CompleteMember(file: String, row: Int, column: Int, prefix: String)
 case class CompleteScope(file: String, row: Int, column: Int, prefix: String)
 //case class CompleteSmart(file: String, row: Int, column: Int, prefix: String)
@@ -66,6 +67,10 @@ class Module(val name: String, val path: String, scalaSourceDirs: Seq[String], c
       sender ! "reloading " + file
       startCompiler()
       compiler.reloadFiles(List(file))
+    }
+
+    case CompileAllFiles(errorFile) => {
+      sender ! compiler.compileFiles(errorFile, sourceFiles)
     }
 
     case CompleteMember(file, row, column, prefix) => {
@@ -169,6 +174,30 @@ class InteractiveCompiler(settings: Settings, reporter: PresentationReporter) ex
     val x = new Response[Unit]
     askReload(files.map(f => getSourceFile(f)), x)
     println(x.get)
+  }
+
+  def compileFiles(errorFile: String, files: List[String]): String = {
+    reloadFiles(files)
+
+    var writer: java.io.BufferedWriter = null
+    try {
+      val file = new java.io.File(errorFile)
+      writer = new java.io.BufferedWriter(new java.io.FileWriter(file, false))
+
+      reporter.allNotes.foreach { n =>
+        writer.write(n.file + ":")
+        writer.write(n.line + ":")
+        writer.write(n.col + ":")
+        writer.write(n.msg)
+        writer.write("\n")
+      }
+
+    } catch {
+      case e: Exception => e.printStackTrace()
+    } finally {
+      writer.close()
+    }
+    errorFile
   }
 
   def completeMember(file: String, row: Int, column: Int, prefix: String): List[Map[String, Any]] = {

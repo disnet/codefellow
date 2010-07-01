@@ -68,7 +68,7 @@ function codefellow#CompleteMember(findstart, base)
         return <SID>getWordUnderCursorIndex()
     else
         silent w!
-        echo "CodeFellow: Please wait..."
+        echo "CodeFellow: member completion..."
         let result = <SID>SendMessage("CompleteMember", <SID>getFileName(), line(".") -1, col("."), a:base)
         return result
     endif
@@ -79,7 +79,7 @@ function codefellow#CompleteScope(findstart, base)
         return <SID>getWordUnderCursorIndex()
     else
         silent w!
-        echo "CodeFellow: Please wait..."
+        echo "CodeFellow: scope completion..."
         let result = <SID>SendMessage("CompleteScope", <SID>getFileName(), line(".") -1, col("."), a:base)
         return result
     endif
@@ -127,4 +127,11 @@ function codefellow#ReloadFile()
     return <SID>SendMessage("ReloadFile", <SID>getFileName())
 endfunction
 
+function codefellow#CompileAllFiles()
+    silent wa!
+    echo "CodeFellow: compile..."
+    exec "set efm=" . '%f:%l:%c:%m'
+    let result = <SID>SendMessage("CompileAllFiles", tempname())
+    exec "cfile " . result
+endfunction
 
