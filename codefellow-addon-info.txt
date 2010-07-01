@@ -1,0 +1,11 @@
+{
+  "name" : "codefellow",
+  "version" : "0.1",
+  "author" : "Roman Roelofsen",
+  "maintainer" : "Roman Roelofsen",
+  "repository" : {"type": "git", "url": "http://github.com/romanroe/codefellow.git"},
+  "runtimepath" : "vim",
+  "dependencies" : {
+  },
+  "description" : "Scala development tool for Vim and Sbt"
+}
