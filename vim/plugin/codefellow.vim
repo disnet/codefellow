@@ -28,9 +28,9 @@ autocmd BufWritePost *.scala call CodeFellowReloadFile()
 "
 function s:SendMessage(type, ...)
 python << endpython
+import socket
+import vim
 try:
-    import socket
-    import vim
     s = socket.create_connection(("localhost", 9081))
 
     argsSize = int(vim.eval("a:0"))
