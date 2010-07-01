@@ -72,7 +72,7 @@ function codefellow#CompleteMember(findstart, base)
     if a:findstart
         return <SID>getWordUnderCursorIndex()
     else
-        w!
+        silent w!
         echo "CodeFellow: Please wait..."
 
         let result = <SID>SendMessage("CompleteMember", <SID>getFileName(), line(".") -1, col("."), a:base)
@@ -89,7 +89,7 @@ function codefellow#CompleteScope(findstart, base)
     if a:findstart
         return <SID>getWordUnderCursorIndex()
     else
-        w!
+        silent w!
         echo "CodeFellow: Please wait..."
 
         let result = <SID>SendMessage("CompleteScope", <SID>getFileName(), line(".") -1, col("."), a:base)
