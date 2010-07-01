@@ -1,5 +1,3 @@
-" Author: Roman Roelofsen <roman.roelofsen@gmail.com>
-" Version: 0.1
 
 if exists("loaded_codefellow")
     finish
