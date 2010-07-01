@@ -19,6 +19,14 @@ Planned:
 * Automatically add '(' and ')' based on the method return type and parameters
 * Completion for named arguments in method invocations
 
+h2. Requirements
+
+* Scala 2.8
+* Sbt project
+* Vim (tested with version 7.2)
+** Compiled with Python support
+** (Optional) Compiled with +balloon_eval for mouse hover type information
+
 h2. Installation
 
 1. Build CodeFellow
