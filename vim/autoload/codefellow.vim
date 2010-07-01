@@ -32,7 +32,7 @@ try:
             break
         data += tmp
 
-    vim.command('return "' + data + '"')
+    vim.command('return ' + data)
 except:
     # Probably not connected
     # Stay silent to not interrupt
@@ -69,14 +69,8 @@ function codefellow#CompleteMember(findstart, base)
     else
         silent w!
         echo "CodeFellow: Please wait..."
-
         let result = <SID>SendMessage("CompleteMember", <SID>getFileName(), line(".") -1, col("."), a:base)
-        let res = []
-        for entryLine in split(result, "\n")
-            let entry = split(entryLine, ";")
-            call add(res, {'word': entry[0], 'abbr': entry[0] . entry[1], 'icase': 0})
-        endfor
-        return res
+        return result
     endif
 endfunction
 
@@ -86,14 +80,8 @@ function codefellow#CompleteScope(findstart, base)
     else
         silent w!
         echo "CodeFellow: Please wait..."
-
         let result = <SID>SendMessage("CompleteScope", <SID>getFileName(), line(".") -1, col("."), a:base)
-        let res = []
-        for entryLine in split(result, "\n")
-            let entry = split(entryLine, ";")
-            call add(res, {'word': entry[0], 'abbr': entry[0] . " (" . entry[1] . ")", 'icase': 0})
-        endfor
-        return res
+        return result
     endif
 endfunction
 
@@ -138,3 +126,5 @@ endfunction
 function codefellow#ReloadFile()
     return <SID>SendMessage("ReloadFile", <SID>getFileName())
 endfunction
+
+

@@ -49,8 +49,8 @@ class VimHandler(moduleRegistry: ModuleRegistry) {
         case None => throw new RuntimeException("Request could not be parsed:" + line)
         case Some(request) => {
           val result = moduleRegistry !? request
-          val forVim = createVimScript(result.asInstanceOf[List[String]].mkString("\n"))
-          //println("VimHandler: Response [" + forVim + "]")
+          val forVim = toVimScript(result)
+          //println("VimHandler: Response >>>" + forVim + "<<<")
           out.write(forVim)
           out.flush()
         }
@@ -92,8 +92,29 @@ class VimHandler(moduleRegistry: ModuleRegistry) {
     }
   }
 
-  private def createVimScript(string: String): String = {
-    string.replace("\"", "\\\"")
+  private def toVimScript(input: Any): String = input match {
+    case s: String => {
+      "\"" + escapeStringForVim(s) + "\""
+    }
+    case i: Int => {
+      i.toString
+    }
+    case d: Double => {
+      d.toString
+    }
+    case l: List[Any] => {
+      "[" + (l map { toVimScript } mkString ",") + "]"
+    }
+    case m: Map[Any, Any] => {
+      "{" + (m map { case (k, v) => toVimScript(k) + ":" + toVimScript(v) } mkString ",") + "}"
+    }
+  }
+
+  private def escapeStringForVim(string: String): String = {
+    var s = string
+    s = s.replace("\"", "\\\"")
+    s = s.replace("\\", "\\\\")
+    s
   }
 
 }

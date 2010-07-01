@@ -57,13 +57,13 @@ class Module(val name: String, val path: String, scalaSourceDirs: Seq[String], c
     }
 
     case ReloadAllFiles => {
-      sender ! List("reloading files")
+      sender ! "reloading all files"
       startCompiler()
       compiler.reloadFiles(sourceFiles)
     }
 
     case ReloadFile(file) => {
-      sender ! List("reloading file")
+      sender ! "reloading " + file
       startCompiler()
       compiler.reloadFiles(List(file))
     }
@@ -169,12 +169,9 @@ class InteractiveCompiler(settings: Settings, reporter: PresentationReporter) ex
     val x = new Response[Unit]
     askReload(files.map(f => getSourceFile(f)), x)
     println(x.get)
-    List("files reloaded")
   }
 
-  def completeMember(file: String, row: Int, column: Int, prefix: String): List[String] = {
-    println("COMPILER: complete member")
-
+  def completeMember(file: String, row: Int, column: Int, prefix: String): List[Map[String, Any]] = {
     val lines = Utils.getLinesFromFilePath(file)
     val offset = Utils.getWordBeforeCursorOffset(lines, row, column)
 
@@ -188,18 +185,20 @@ class InteractiveCompiler(settings: Settings, reporter: PresentationReporter) ex
     }
     val filtered = names filter {m =>
       m match {
-        case TypeMember(sym, tpe, true, viaImport, viaView) =>
-          if (sym.nameString.startsWith(prefix)) true else false
-        case _ =>
-          false
+        case TypeMember(sym, tpe, true, viaImport, viaView) => sym.nameString.startsWith(prefix)
+        case _ => false
       }
     }
-    filtered map { case TypeMember(sym, tpe, true, viaImport, viaView) => sym.nameString + ";" + tpe }
+    filtered map {
+      case TypeMember(sym, tpe, true, viaImport, viaView) => {
+        Map("word" -> sym.nameString, 
+            "abbr" -> (sym.nameString + tpe.toString),
+            "icase" -> 0)
+      }
+    }
   }
 
-  def completeScope(file: String, row: Int, column: Int, prefix: String): List[String] = {
-    println("COMPILER: complete scope")
-
+  def completeScope(file: String, row: Int, column: Int, prefix: String): List[Map[String, Any]] = {
     val lines = Utils.getLinesFromFilePath(file)
     val offset = Utils.getWordBeforeCursorOffset(lines, row, column)
 
@@ -213,18 +212,20 @@ class InteractiveCompiler(settings: Settings, reporter: PresentationReporter) ex
     }
     val filtered = names filter {m =>
       m match {
-        case ScopeMember(sym, tpe, true, viaImport) =>
-          if (sym.nameString.startsWith(prefix)) true else false
-        case _ =>
-          false
+        case ScopeMember(sym, tpe, true, viaImport) => sym.nameString.startsWith(prefix)
+        case _ => false
       }
     }
-    filtered map { case ScopeMember(sym, tpe, true, viaImport) => sym.nameString + ";" + viaImport }
+    filtered map {
+      case ScopeMember(sym, tpe, true, viaImport) => {
+        Map("word" -> sym.nameString, 
+            "abbr" -> (sym.nameString + " (" + viaImport + ")"),
+            "icase" -> 0)
+      }
+    }
   }
 
-  def typeInfo(file: String, row: Int, column: Int) = {
-    println("COMPILER: typeinfo")
-
+  def typeInfo(file: String, row: Int, column: Int): String = {
     val lines = Utils.getLinesFromFilePath(file)
     val offset = Utils.getCursorOffset(lines, row, column)
 
@@ -235,7 +236,7 @@ class InteractiveCompiler(settings: Settings, reporter: PresentationReporter) ex
       case Left(tree) => typeOfTree(tree)
       case Right(e) => "UNKNOWN"
     }
-    List(result)
+    result
   }
 
   private def typeOfTree(t:Tree): String = {
