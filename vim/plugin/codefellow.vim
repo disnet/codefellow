@@ -8,12 +8,11 @@ let loaded_codefellow=1
 
 
 " OmniCompletion
-autocmd FileType scala setlocal omnifunc=CodeFellowComplete
+autocmd FileType scala setlocal omnifunc=codefellow#CompleteMember
 
 if !exists('g:codefellow_no_default_mappings')
   " default completion: (<c-s> will not work in console Vim !):
-  " note the noremap which will not cause an infinite loop
-  autocmd FileType scala inoremap <buffer> <C-x><C-o> <C-O>:set omnifunc=codefellow#Complete<CR><c-x><c-o>
+  autocmd FileType scala inoremap <buffer> <C-x><C-o> <C-O>:set omnifunc=codefellow#CompleteMember<CR><c-x><c-o>
 
   " special mappings calling special completion functions
   autocmd FileType scala inoremap <buffer> <C-s><C-m> <C-O>:set omnifunc=codefellow#CompleteMember<CR><c-x><c-o>

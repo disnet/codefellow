@@ -17,6 +17,7 @@ Planned:
 * Jump to definition
 * Syntax check on buffer save
 * Automatically add '(' and ')' based on the method return type and parameters
+* Completion for named arguments in method invocations
 
 h2. Installation
 
@@ -67,7 +68,7 @@ The following key bindings are available:
 |_. Key |_. Mode |_. Description |
 |Ctrl+s Ctrl+m | insert mode | Activate member completion function and trigger omni completion (triggers buffer save) |
 |Ctrl+s Ctrl+s | insert mode | Activate scope completion function and trigger omni completion (triggers buffer save) |
-|Ctrl+s Ctrl+t | command mode | Print type information of expression under cursor |
+|Ctrl+s Ctrl+t or F1 | command mode | Print type information of expression under cursor |
 
 h2. Screencast
 
@@ -80,4 +81,4 @@ Thanks a lot to "Marc Weber":http://github.com/MarcWeber and "Eric Sessoms":http
 h2. Acknowledgement
 
 * Almost all functionality for the code completion is already implemented in the Scala compiler. CodeFellow would not be possible without the work of the Scala compiler team!
-* I learned most about the Scala compiler by looking at and using the source code from "aemoncannon's":http://github.com/aemoncannon emacs mode "ensime":http://github.com/aemoncannon/ensime. Thank you!
+* I learned most about the Scala compiler by looking at and using the source code from "Aemon Cannon's":http://github.com/aemoncannon emacs mode "ensime":http://github.com/aemoncannon/ensime. Thank you!

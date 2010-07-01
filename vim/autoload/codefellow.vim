@@ -63,11 +63,6 @@ function s:getWordUnderCursorIndex()
     return i
 endfunction
 
-function codefellow#Complete(findstart, base)
-    " TODO Detect which completion type to use
-    return codefellow#CompleteMember(a:findstart, a:base)
-endfunction
-
 function codefellow#CompleteMember(findstart, base)
     if a:findstart
         return <SID>getWordUnderCursorIndex()
