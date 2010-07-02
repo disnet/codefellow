@@ -1,7 +1,6 @@
 
 package de.tuxed.codefellow
 
-import java.util.Scanner
 import java.io._
 import java.net._
 
@@ -20,8 +19,7 @@ class VimHandler(moduleRegistry: ModuleRegistry) {
         println("VimHandler: Connection end")
       }
       catch {
-        case e: IOException =>
-        {
+        case e: IOException => {
           System.err.println("Error in server listen loop: " + e)
         }
       }
@@ -30,7 +28,7 @@ class VimHandler(moduleRegistry: ModuleRegistry) {
   }
 
   def handleConnection(socket: Socket) {
-    val scanner = new Scanner(new InputStreamReader(socket.getInputStream()))
+    val reader = new BufferedReader(new InputStreamReader(socket.getInputStream()))
     val out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()))
     try {
       var line = ""
@@ -38,10 +36,7 @@ class VimHandler(moduleRegistry: ModuleRegistry) {
       var tmp = ""
       while (tmp != "ENDREQUEST") {
         line += tmp
-        while (!scanner.hasNextLine) {
-          Thread.sleep(50)
-        }
-        tmp = scanner.nextLine
+        tmp = reader.readLine()
       }
 
       //println("VimHandler: Request [" + line + "]")
@@ -52,12 +47,15 @@ class VimHandler(moduleRegistry: ModuleRegistry) {
           val forVim = toVimScript(result)
           //println("VimHandler: Response >>>" + forVim + "<<<")
           out.write(forVim)
-          out.flush()
         }
       }
     } catch {
-      case e: Exception => e.printStackTrace()
+      case e: Exception => {
+        e.printStackTrace()
+        out.write("Exception: " + e)
+      }
     } finally {
+      out.flush()
       socket.close()
     }
   }
@@ -111,10 +109,10 @@ class VimHandler(moduleRegistry: ModuleRegistry) {
   }
 
   private def escapeStringForVim(string: String): String = {
-    var s = string
-    s = s.replace("\"", "\\\"")
-    s = s.replace("\\", "\\\\")
-    s
+    string
+      .replace("\\", "\\\\")
+      .replace("\"", "\\\"")
+      .replace("\n", "\\n")
   }
 
 }
