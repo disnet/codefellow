@@ -241,8 +241,15 @@ class InteractiveCompiler(settings: Settings, reporter: PresentationReporter) ex
   }
 
   private def createVimOmniCompletionEntry(entry: CompletionEntry): Map[String, Any] = {
-    Map("word" -> entry.name, 
-        "abbr" -> (entry.name + entry.signature + " - " + entry.viaImport),
+    var word = entry.name
+    var sign = entry.signature
+    
+    if (sign.startsWith("=> ")) {
+      sign = ": " + sign.substring(3)
+    }
+
+    Map("word" -> word, 
+        "abbr" -> (word + sign),
         "icase" -> 0)
   }
 
