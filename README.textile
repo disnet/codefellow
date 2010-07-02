@@ -10,14 +10,15 @@ The following features are already implemented in Vim:
 * Member completion 
 * Scope completion 
 * Get type information for expressions
+* Compiler errors are shown in Vim (quickfix + markers)
 * Support for multi-module builds (each module will have it's own classpath)
 
 Planned:
 
 * Jump to definition
-* Syntax check on buffer save
 * Automatically add '(' and ')' based on the method return type and parameters
 * Completion for named arguments in method invocations
+* Organize imports (like in Eclipse)
 
 h2. Requirements
 
@@ -76,6 +77,7 @@ The following key bindings are available:
 |_. Key |_. Mode |_. Description |
 |Ctrl+s Ctrl+m | insert mode | Activate member completion function and trigger omni completion (triggers buffer save) |
 |Ctrl+s Ctrl+s | insert mode | Activate scope completion function and trigger omni completion (triggers buffer save) |
+| F9 | command mode | Compile the current file and show compiler errors |
 |Ctrl+s Ctrl+t or F1 | command mode | Print type information of expression under cursor |
 
 h2. Screencast
