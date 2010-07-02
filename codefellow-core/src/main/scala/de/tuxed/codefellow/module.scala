@@ -299,11 +299,6 @@ class InteractiveCompiler(settings: Settings, reporter: PresentationReporter) ex
       active = false
       numberOfRuns += 1
     }
-
-    println("-------------------------------------------------")
-    println("no of notes: " + reporter.allNotes.size)
-    reporter.allNotes.foreach(println)
-    println("-------------------------------------------------")
   }
 
 }

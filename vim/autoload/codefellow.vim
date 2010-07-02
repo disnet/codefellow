@@ -140,7 +140,6 @@ endfunction
 
 function codefellow#CompileAllFiles()
     silent wa!
-    echo "CodeFellow: compile..."
     exec 'set efm=%f:%l:%c:%m'
     let result = <SID>SendMessage("CompileAllFiles", tempname())
     exec "cfile " . result
