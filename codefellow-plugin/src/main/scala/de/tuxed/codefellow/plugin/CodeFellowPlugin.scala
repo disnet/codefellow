@@ -6,26 +6,47 @@ import java.io.{BufferedWriter, FileWriter}
 
 trait CodeFellowPlugin extends Project {
 
+  private val processed = new scala.collection.mutable.HashSet[Project]
+
   lazy val codefellow = task {
     handleProject(this)
     None
   }
 
-  def handleProject(project: Project): Unit = project match {
-    case parent: ParentProject => parent.dependencies.foreach(d => handleProject(d)) 
-    case project: DefaultProject => createModuleDescription(project)
+  def handleProject(project: Project): Unit = {
+    if (!processed.contains(project)) {
+      processed += project
+      project match {
+        case parent: ParentProject => parent.dependencies.foreach(d => handleProject(d)) 
+        case project: DefaultProject => createModuleDescription(project)
+        case _ =>
+      }
+    }
   }
 
   def createModuleDescription(project: DefaultProject) {
     val prj = Path.fromFile(project.info.projectDirectory)
 
     val libs = project.fullClasspath(new Configuration("compile")).get.toSeq
-    val prjs = project.dependencies.toList.asInstanceOf[List[DefaultProject]].map(_.mainCompilePath)
-    val all_jars = libs ++ prjs
+
+    val deps = project.dependencies.toList
+    val projectDependencies = deps flatMap {
+      case project: DefaultProject => {
+        handleProject(project)
+        Some(project)
+      }
+      case parent: ParentProject => {
+        handleProject(parent)
+        None
+      }
+      case _ => None
+    }
+    val projectDependenciesCompilePaths = projectDependencies map { _.mainCompilePath }
+    val projectDependenciesSourcePaths = projectDependencies map { _.mainScalaSourcePath }
+    val all_jars = libs ++ projectDependenciesCompilePaths
 
     val src = project.mainScalaSourcePath
-    val deps_src = project.dependencies.toList.asInstanceOf[List[DefaultProject]].map(_.mainScalaSourcePath)
-    val all_srcs = src :: deps_src
+    val all_srcs = src :: projectDependenciesSourcePaths
 
     writeModuleFile(prj, project.name, all_srcs, all_jars)
   }
