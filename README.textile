@@ -44,7 +44,7 @@ bc. cp <<codefellow_dir>>/vim/plugin/codefellow.vim ~/.vim/plugin/
 
 bc. import sbt._
 class Plugins(info: ProjectInfo) extends PluginDefinition(info) {
-  val a = "de.tuxed" % "codefellow-plugin" % "0.1"
+  val codefellow = "de.tuxed" % "codefellow-plugin" % "0.3"
 }
 
 4. Mixin the CodeFellow trait to your project definition

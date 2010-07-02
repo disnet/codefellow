@@ -138,10 +138,10 @@ function codefellow#ReloadFile()
     return <SID>SendMessage("ReloadFile", <SID>getFileName())
 endfunction
 
-function codefellow#CompileAllFiles()
+function codefellow#CompileFile()
     silent wa!
     exec 'set efm=%f:%l:%c:%m'
-    let result = <SID>SendMessage("CompileAllFiles", tempname())
+    let result = <SID>SendMessage("CompileFile", tempname(), <SID>getFileName())
     exec "cfile " . result
     call <SID>ShowCompilerMarkers()
 endfunction

@@ -16,7 +16,7 @@ if !exists('g:codefellow_no_default_mappings')
   autocmd FileType scala noremap <buffer> <C-s><C-t> <esc>:<c-u>call codefellow#PrintTypeInfo()<CR>
   autocmd FileType scala noremap <buffer> <F1> :call codefellow#PrintTypeInfo()<CR>
 
-  autocmd FileType scala noremap <buffer> <F9> :call codefellow#CompileAllFiles()<CR>
+  autocmd FileType scala noremap <buffer> <F9> :call codefellow#CompileFile()<CR>
 endif
 
 " Balloon type information

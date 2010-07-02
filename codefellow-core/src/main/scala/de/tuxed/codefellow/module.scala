@@ -21,12 +21,17 @@ import scala.tools.nsc.symtab.Flags
 
 case object StartCompiler
 case object Shutdown
+
 case object ReloadAllFiles
 case class ReloadFile(file: String)
+
 case class CompileAllFiles(errorFile: String)
+case class CompileFile(errorFile: String, file: String)
+
 case class CompleteMember(file: String, row: Int, column: Int, prefix: String)
 case class CompleteScope(file: String, row: Int, column: Int, prefix: String)
 //case class CompleteSmart(file: String, row: Int, column: Int, prefix: String)
+
 case class TypeInfo(file: String, row: Int, column: Int)
 
 class Module(val name: String, val path: String, scalaSourceDirs: Seq[String], classpath: Seq[String]) extends Actor {
@@ -71,6 +76,10 @@ class Module(val name: String, val path: String, scalaSourceDirs: Seq[String], c
 
     case CompileAllFiles(errorFile) => {
       sender ! compiler.compileFiles(errorFile, sourceFiles)
+    }
+
+    case CompileFile(errorFile, file) => {
+      sender ! compiler.compileFiles(errorFile, List(file))
     }
 
     case CompleteMember(file, row, column, prefix) => {
@@ -123,7 +132,9 @@ class Module(val name: String, val path: String, scalaSourceDirs: Seq[String], c
 
   private def createInteractiveCompiler() {
     val cp = System.getProperty("java.class.path") + ":" + classpath.mkString(":")
-    val compilerArgs = List("-classpath", cp, "-verbose")
+    //val compilerArgs = List("-classpath", cp, "-verbose")
+    val compilerArgs = List("-classpath", cp)
+
     val settings = new Settings(Console.println)
     settings.processArguments(compilerArgs, true)
     //val reporter = new ConsoleReporter(settings)
@@ -136,7 +147,7 @@ class Module(val name: String, val path: String, scalaSourceDirs: Seq[String], c
     if (compiler == null) {
       createSourceFilesList
       createInteractiveCompiler
-      compiler.reloadFiles(sourceFiles)
+      //compiler.reloadFiles(sourceFiles) // TODO Need to check if this will cause problems
     }
   }
 
@@ -153,29 +164,18 @@ class InteractiveCompiler(settings: Settings, reporter: PresentationReporter) ex
 
   var active = false
 
-  var numberOfRuns: Long = 0
-
   def blockWhileActive() {
     while (active) {
       println("BLOCKING compiler is active")
-      Thread.sleep(50)
+      Thread.sleep(10)
     }
   }
 
-  def unitOfWork[A](body: => A): A = {
-    val start = numberOfRuns
-    val result = body
-    while (start == numberOfRuns) {
-      println("BLOCKING numberOfRuns did not change")
-      Thread.sleep(50)
-    }
-    result
-  }
-
-  def reloadFiles(files: List[String]) = unitOfWork {
+  def reloadFiles(files: List[String]) = {
+    active = true
     val x = new Response[Unit]
     askReload(files.map(f => getSourceFile(f)), x)
-    println(x.get)
+    //println(x.get)
   }
 
   def compileFiles(errorFile: String, files: List[String]): String = {
@@ -262,7 +262,7 @@ class InteractiveCompiler(settings: Settings, reporter: PresentationReporter) ex
 
   private def typeOfTree(t:Tree): String = {
     var tree = t
-    println("Class of tree: " + tree.getClass)
+    //println("Class of tree: " + tree.getClass)
     tree = tree match {
       case Select(qual, name) if tree.tpe == ErrorType => qual
       case t: ImplDef if t.impl != null => t.impl
@@ -284,12 +284,10 @@ class InteractiveCompiler(settings: Settings, reporter: PresentationReporter) ex
       super.recompile(units)
     } catch {
       case e: Throwable =>
-        println("RECOMPILING error: " + units)
-        throw e
+        println("RECOMPILING error: " + e)
     } finally {
-      println("RECOMPILING finally: " + units)
+      println("RECOMPILING done: " + units)
       active = false
-      numberOfRuns += 1
     }
   }
 
