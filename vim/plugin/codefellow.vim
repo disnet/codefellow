@@ -6,7 +6,6 @@ let loaded_codefellow=1
 
 
 " OmniCompletion
-autocmd FileType scala setlocal omnifunc=codefellow#CompleteMember
 
 if !exists('g:codefellow_no_default_mappings')
   " default completion: (<c-s> will not work in console Vim !):
