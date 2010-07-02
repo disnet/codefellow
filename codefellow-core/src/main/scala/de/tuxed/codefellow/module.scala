@@ -132,8 +132,8 @@ class Module(val name: String, val path: String, scalaSourceDirs: Seq[String], c
 
   private def createInteractiveCompiler() {
     val cp = System.getProperty("java.class.path") + ":" + classpath.mkString(":")
-    //val compilerArgs = List("-classpath", cp, "-verbose")
-    val compilerArgs = List("-classpath", cp)
+    val compilerArgs = List("-classpath", cp, "-verbose")
+    //val compilerArgs = List("-classpath", cp)
 
     val settings = new Settings(Console.println)
     settings.processArguments(compilerArgs, true)
@@ -166,7 +166,7 @@ class InteractiveCompiler(settings: Settings, reporter: PresentationReporter) ex
 
   def blockWhileActive() {
     while (active) {
-      println("BLOCKING compiler is active")
+      //println("BLOCKING compiler is active")
       Thread.sleep(10)
     }
   }
@@ -278,15 +278,15 @@ class InteractiveCompiler(settings: Settings, reporter: PresentationReporter) ex
   }
 
    override def recompile(units: List[RichCompilationUnit]) {
-    println("RECOMPILING start: " + units)
+    println("Compiling: " + units)
     try {
       active = true
       super.recompile(units)
     } catch {
       case e: Throwable =>
-        println("RECOMPILING error: " + e)
+        println("Error while compiling: " + e)
     } finally {
-      println("RECOMPILING done: " + units)
+      println("Compiler done")
       active = false
     }
   }

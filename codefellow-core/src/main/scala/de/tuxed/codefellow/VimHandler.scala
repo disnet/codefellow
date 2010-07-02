@@ -14,9 +14,9 @@ class VimHandler(moduleRegistry: ModuleRegistry) {
     while (true) {
       try {
         val socket = listener.accept()
-        println("VimHandler: Connection start")
+        //println("VimHandler: Connection start")
         handleConnection(socket)
-        println("VimHandler: Connection end")
+        //println("VimHandler: Connection end")
       }
       catch {
         case e: IOException => {
