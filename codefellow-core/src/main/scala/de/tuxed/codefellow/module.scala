@@ -147,6 +147,8 @@ class Module(val name: String, val path: String, scalaSourceDirs: Seq[String], c
 }
 
 
+case class CompletionEntry(name: String, signature: String, viaImport: String)
+
 class InteractiveCompiler(settings: Settings, reporter: PresentationReporter) extends Global(settings, reporter) {
 
   var active = false
@@ -212,17 +214,9 @@ class InteractiveCompiler(settings: Settings, reporter: PresentationReporter) ex
       case Left(m) => m
       case Right(e) => List()
     }
-    val filtered = names filter {m =>
-      m match {
-        case TypeMember(sym, tpe, true, viaImport, viaView) => sym.nameString.startsWith(prefix)
-        case _ => false
-      }
-    }
-    filtered map {
-      case TypeMember(sym, tpe, true, viaImport, viaView) => {
-        Map("word" -> sym.nameString, 
-            "abbr" -> (sym.nameString + tpe.toString),
-            "icase" -> 0)
+    names collect {
+      case TypeMember(sym, tpe, true, viaImport, viaView) if sym.nameString.startsWith(prefix) => {
+        createVimOmniCompletionEntry(CompletionEntry(sym.nameString, tpe.toString, viaImport.toString))
       }
     }
   }
@@ -239,19 +233,17 @@ class InteractiveCompiler(settings: Settings, reporter: PresentationReporter) ex
       case Left(m) => m
       case Right(e) => List()
     }
-    val filtered = names filter {m =>
-      m match {
-        case ScopeMember(sym, tpe, true, viaImport) => sym.nameString.startsWith(prefix)
-        case _ => false
+    names collect {
+      case ScopeMember(sym, tpe, true, viaImport) if sym.nameString.startsWith(prefix) => {
+        createVimOmniCompletionEntry(CompletionEntry(sym.nameString, tpe.toString, viaImport.toString))
       }
     }
-    filtered map {
-      case ScopeMember(sym, tpe, true, viaImport) => {
-        Map("word" -> sym.nameString, 
-            "abbr" -> (sym.nameString + " (" + viaImport + ")"),
-            "icase" -> 0)
-      }
-    }
+  }
+
+  private def createVimOmniCompletionEntry(entry: CompletionEntry): Map[String, Any] = {
+    Map("word" -> entry.name, 
+        "abbr" -> (entry.name + entry.signature + " - " + entry.viaImport),
+        "icase" -> 0)
   }
 
   def typeInfo(file: String, row: Int, column: Int): String = {
