@@ -8,3 +8,4 @@ object Project1 {
   def helloString() = "Hello"
   def helloListOfInts() = List(1,2,3)
 }
+

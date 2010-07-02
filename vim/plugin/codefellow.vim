@@ -5,8 +5,6 @@ endif
 let loaded_codefellow=1
 
 
-" OmniCompletion
-
 if !exists('g:codefellow_no_default_mappings')
   " default completion: (<c-s> will not work in console Vim !):
   autocmd FileType scala inoremap <buffer> <C-x><C-o> <C-O>:set omnifunc=codefellow#CompleteMember<CR><c-x><c-o>

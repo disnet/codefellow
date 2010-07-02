@@ -40,6 +40,17 @@ except:
 endpython
 endfunction
 
+
+execute "sign define codefellow_marker_error text=! linehl=ErrorMsg"
+
+function s:ShowCompilerMarkers()
+    sign unplace *
+    for a in getqflist()
+        let id = a.bufnr . a.lnum
+        execute ":sign place " . id . " line=" . a.lnum . " name=codefellow_marker_error buffer=" . a.bufnr
+    endfor
+endfunction
+
 "
 " Returns the absolute path of the current file
 "
@@ -130,8 +141,10 @@ endfunction
 function codefellow#CompileAllFiles()
     silent wa!
     echo "CodeFellow: compile..."
-    exec "set efm=" . '%f:%l:%c:%m'
+    exec 'set efm=%f:%l:%c:%m'
     let result = <SID>SendMessage("CompileAllFiles", tempname())
     exec "cfile " . result
+    call <SID>ShowCompilerMarkers()
 endfunction
+
 
