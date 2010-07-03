@@ -19,6 +19,8 @@ if !exists('g:codefellow_no_default_mappings')
   autocmd FileType scala noremap <buffer> <F9> :call codefellow#CompileFile()<CR>
 endif
 
+command CodefellowCompileAll call codefellow#CompileFile()
+
 " Balloon type information
 if has("balloon_eval")
     autocmd FileType scala setlocal ballooneval
