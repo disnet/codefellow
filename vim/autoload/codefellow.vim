@@ -142,7 +142,7 @@ function codefellow#CompileFile()
     silent wa!
     exec 'set efm=%f:%l:%c:%m'
     let result = <SID>SendMessage("CompileFile", tempname(), <SID>getFileName())
-    exec "cfile " . result
+    call setqflist(result)
     call <SID>ShowCompilerMarkers()
 endfunction
 
