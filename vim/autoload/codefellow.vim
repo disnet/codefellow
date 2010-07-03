@@ -79,7 +79,7 @@ function codefellow#CompleteMember(findstart, base)
         return <SID>getWordUnderCursorIndex()
     else
         silent w!
-        echo "CodeFellow: member completion..."
+        call codefellow#Echo("CodeFellow: member completion...")
         let result = <SID>SendMessage("CompleteMember", <SID>getFileName(), line(".") -1, col("."), a:base)
         return result
     endif
@@ -90,7 +90,7 @@ function codefellow#CompleteScope(findstart, base)
         return <SID>getWordUnderCursorIndex()
     else
         silent w!
-        echo "CodeFellow: scope completion..."
+        call codefellow#Echo("CodeFellow: scope completion...")
         let result = <SID>SendMessage("CompleteScope", <SID>getFileName(), line(".") -1, col("."), a:base)
         return result
     endif
@@ -101,7 +101,7 @@ endfunction
         "return <SID>getWordUnderCursorIndex()
     "else
         "w!
-        "echo "CodeFellow: Please wait..."
+        "call codefellow#Echo("CodeFellow: Please wait...")
 "
         "let offset = <SID>getWordBeforeCursorOffset()
         "let result = <SID>SendMessage("CompleteSmart", expand("%:p"), offset, a:base)
@@ -128,7 +128,7 @@ endfunction
 function codefellow#PrintTypeInfo()
     let bufmod = getbufvar(bufnr(bufname("%")), "&mod")
     if bufmod == 1
-        echo "Save buffer to get type information"
+        call codefellow#Echo("Save buffer to get type information")
     else
         echo <SID>SendMessage("TypeInfo", <SID>getFileName(), line(".") - 1, col("."))
     endif
@@ -146,4 +146,8 @@ function codefellow#CompileFile()
     call <SID>ShowCompilerMarkers()
 endfunction
 
-
+function codefellow#Echo(s)
+  if g:codefellow_verbose
+    exec 'echo '.string(a:s)
+  endif
+endfunction
