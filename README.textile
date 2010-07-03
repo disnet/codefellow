@@ -72,6 +72,10 @@ h2. Usage
 
 *Note:* The first invocation of a CodeFellow feature might take a couple of seconds since the compiler daemon for each module in your build will be started on demand.
 
+9. debugging:
+  set this in your ~/.vimrc:
+  let g:codefellow_verbose = 1
+
 The following key bindings are available:
 
 |_. Key |_. Mode |_. Description |
