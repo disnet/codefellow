@@ -25,8 +25,8 @@ case object Shutdown
 case object ReloadAllFiles
 case class ReloadFile(file: String)
 
-case class CompileAllFiles(errorFile: String)
-case class CompileFile(errorFile: String, file: String)
+case class CompileAllFiles(currentFile: String)
+case class CompileFile(file: String)
 
 case class CompleteMember(file: String, row: Int, column: Int, prefix: String)
 case class CompleteScope(file: String, row: Int, column: Int, prefix: String)
@@ -74,12 +74,13 @@ class Module(val name: String, val path: String, scalaSourceDirs: Seq[String], c
       compiler.reloadFiles(List(file))
     }
 
-    case CompileAllFiles(errorFile) => {
-      sender ! compiler.compileFiles(errorFile, sourceFiles)
+    case CompileAllFiles(currentFile) => {
+      startCompiler()
+      sender ! compiler.compileFiles(currentFile, sourceFiles)
     }
 
-    case CompileFile(errorFile, file) => {
-      sender ! compiler.compileFiles(errorFile, List(file))
+    case CompileFile(file) => {
+      sender ! compiler.compileFiles("", List(file))
     }
 
     case CompleteMember(file, row, column, prefix) => {
@@ -178,28 +179,29 @@ class InteractiveCompiler(settings: Settings, reporter: PresentationReporter) ex
     //println(x.get)
   }
 
-  def compileFiles(errorFile: String, files: List[String]): String = {
+  def compileFiles(currentFile: String, files: List[String]): List[Map[String, Any]] = {
     reloadFiles(files)
 
-    var writer: java.io.BufferedWriter = null
-    try {
-      val file = new java.io.File(errorFile)
-      writer = new java.io.BufferedWriter(new java.io.FileWriter(file, false))
-
-      reporter.allNotes.foreach { n =>
-        writer.write(n.file + ":")
-        writer.write(n.line + ":")
-        writer.write(n.col + ":")
-        writer.write(n.msg)
-        writer.write("\n")
-      }
-
-    } catch {
-      case e: Exception => e.printStackTrace()
-    } finally {
-      writer.close()
-    }
-    errorFile
+    // sorty by
+    // 1) is currentfile (so that you don't change buffer if the current buffer has errors)
+    // 2) filename
+    // 3) linenumber
+    reporter.allNotes.sortWith((n1:Note,n2:Note) => {
+      val isCurrentFile = (n:Note) => if (n.file.equals(currentFile)) 1 else 0
+      val a = new Array[Int](4)
+      // 1-3 should be lazy
+      a(0) = isCurrentFile(n1) - isCurrentFile( n2)
+      a(1) = n1.file.compare(n2.file)
+      a(2) = n2.line - n1.line
+      a(3) = -1
+      a.dropWhile(_ == 0).head > 0
+    }).map(n => {
+      Map("filename" -> n.file,
+          "lnum" -> n.line,
+          "col" -> n.col,
+          "text" -> n.msg
+      )
+    })
   }
 
   def completeMember(file: String, row: Int, column: Int, prefix: String): List[Map[String, Any]] = {
