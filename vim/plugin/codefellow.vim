@@ -18,7 +18,11 @@ if !exists('g:codefellow_no_default_mappings')
   autocmd FileType scala noremap <buffer> <C-s><C-t> <esc>:<c-u>call codefellow#PrintTypeInfo()<CR>
   autocmd FileType scala noremap <buffer> <F1> :call codefellow#PrintTypeInfo()<CR>
 
-  autocmd FileType scala noremap <buffer> <F9> :call codefellow#CompileFile()<CR>
+  " If current file is a SBT project always map F9
+  let ft_only  = isdirectory('project/build') 
+        \ ? ["",""]
+        \ : ['autocmd FileType scala','<buffer>']
+  exec ft_only[0]' noremap '.ft_only[1].' <F9> :call codefellow#CompileFile()<CR>'
 endif
 
 command CodefellowCompileAll call codefellow#CompileFile()
