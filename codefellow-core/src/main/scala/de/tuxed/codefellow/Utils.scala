@@ -33,7 +33,7 @@ object Utils {
     io.Source.fromFile(path).getLines.toList
 
   def getLineOffset(lines: List[String], row: Int): Int =
-    lines.take(row).map(_.length +1).sum
+    lines take row map { _.length + 1 } sum
 
   def getCursorOffset(lines: List[String], row: Int, column: Int): Int =
     getLineOffset(lines, row) + column
