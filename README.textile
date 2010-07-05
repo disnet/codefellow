@@ -3,6 +3,8 @@ h1. CodeFellow
 
 *Scala development tool for Vim and Sbt*
 
+*Note:* CodeFellow is still in _alpha_ state!
+
 h2. Features
 
 The following features are already implemented in Vim:
