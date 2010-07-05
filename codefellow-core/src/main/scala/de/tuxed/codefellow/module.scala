@@ -22,7 +22,7 @@ import scala.tools.nsc.symtab.Flags
 case object StartCompiler
 case object Shutdown
 
-case object ReloadAllFiles
+case class ReloadAllFiles()
 case class ReloadFile(file: String)
 
 case class CompileAllFiles(currentFile: String)
@@ -62,7 +62,7 @@ class Module(val name: String, val path: String, scalaSourceDirs: Seq[String], c
       exit('stop)
     }
 
-    case ReloadAllFiles => {
+    case ReloadAllFiles() => {
       sender ! "reloading all files"
       startCompiler()
       compiler.reloadFiles(sourceFiles)
