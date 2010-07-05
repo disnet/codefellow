@@ -186,7 +186,7 @@ class InteractiveCompiler(settings: Settings, reporter: PresentationReporter) ex
     // 1) is currentfile (so that you don't change buffer if the current buffer has errors)
     // 2) filename
     // 3) linenumber
-    reporter.allNotes sortWith { (n1: Note, n2: Note) => {
+    val sortedNotes = reporter.allNotes sortWith { (n1: Note, n2: Note) => {
       val isCurrentFile = (n:Note) => if (n.file.equals(currentFile)) 1 else 0
       val a = new Array[Int](4)
       // 1-3 should be lazy
@@ -195,13 +195,13 @@ class InteractiveCompiler(settings: Settings, reporter: PresentationReporter) ex
       a(2) = n2.line - n1.line
       a(3) = -1
       a.dropWhile(_ == 0).head > 0
-    } } map { n => {
-      Map("filename" -> n.file,
-          "lnum" -> n.line,
-          "col" -> n.col,
-          "text" -> n.msg)
-      } }
-    }
+    } }
+    
+    sortedNotes map { n => Map("filename" -> n.file,
+                               "lnum" -> n.line,
+                               "col" -> n.col,
+                               "text" -> n.msg) }
+  }
 
   def completeMember(file: String, row: Int, column: Int, prefix: String): List[Map[String, Any]] = {
     val lines = Utils.getLinesFromFilePath(file)
