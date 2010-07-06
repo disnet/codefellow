@@ -77,6 +77,7 @@ h2. Usage
 9. debugging:
   set this in your ~/.vimrc:
   let g:codefellow_verbose = 1
+  g:codefellow_last_exception contains the text of the last received failure
 
 The following key bindings are available:
 

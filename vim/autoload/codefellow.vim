@@ -32,12 +32,21 @@ try:
             break
         data += tmp
 
-    vim.command('return ' + data)
+    vim.command("let g:codefellow_res = "+data)
 except:
-    # Probably not connected
-    # Stay silent to not interrupt
-    vim.command('return ""')
+    vim.command('let g:codefellow_res =  {"left" : "Exception in Python code"}')
 endpython
+
+  if has_key(g:codefellow_res,'left')
+    let exception = g:codefellow_res['left']
+    let g:codefellow_last_exception = exception
+    throw exception
+  elseif has_key(g:codefellow_res,'right')
+    return g:codefellow_res['right']
+  else
+    throw "either left or right key expected"
+  endif
+
 endfunction
 
 
@@ -126,10 +135,10 @@ function codefellow#BalloonType()
 endfunction
 
 function codefellow#PrintTypeInfo()
-    let bufmod = getbufvar(bufnr(bufname("%")), "&mod")
-    if bufmod == 1
+    if &modified == 1
         call codefellow#Echo("Save buffer to get type information")
     else
+        " reloading of buffer is done on buf write
         echo <SID>SendMessage("TypeInfo", <SID>getFileName(), line(".") - 1, col("."))
     endif
 endfunction

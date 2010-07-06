@@ -110,6 +110,11 @@ class Module(val name: String, val path: String, scalaSourceDirs: Seq[String], c
       startCompiler()
       sender ! compiler.typeInfo(file, row, column)
     }
+
+    case x => {
+      throw new Exception("unhandled request: "+x)
+    }
+
   }
 
   def act {
