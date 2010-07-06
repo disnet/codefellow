@@ -19,20 +19,22 @@ import scala.tools.nsc.symtab.Types
 import scala.tools.nsc.symtab.Flags
 
 
-case object StartCompiler
-case object Shutdown
+sealed abstract class CompilerRequest()
 
-case object ReloadAllFiles
-case class ReloadFile(file: String)
+case object StartCompiler extends CompilerRequest
+case object Shutdown extends CompilerRequest
 
-case class CompileAllFiles(currentFile: String)
-case class CompileFile(file: String)
+case object ReloadAllFiles extends CompilerRequest
+case class ReloadFile(file: String) extends CompilerRequest
 
-case class CompleteMember(file: String, row: Int, column: Int, prefix: String)
-case class CompleteScope(file: String, row: Int, column: Int, prefix: String)
-//case class CompleteSmart(file: String, row: Int, column: Int, prefix: String)
+case class CompileAllFiles(currentFile: String) extends CompilerRequest
+case class CompileFile(file: String) extends CompilerRequest
 
-case class TypeInfo(file: String, row: Int, column: Int)
+case class CompleteMember(file: String, row: Int, column: Int, prefix: String) extends CompilerRequest
+case class CompleteScope(file: String, row: Int, column: Int, prefix: String) extends CompilerRequest
+//case class CompleteSmart(file: String, row: Int, column: Int, prefix: String) extends CompilerRequest
+
+case class TypeInfo(file: String, row: Int, column: Int) extends CompilerRequest
 
 class Module(val name: String, val path: String, scalaSourceDirs: Seq[String], classpath: Seq[String]) extends Actor {
     
