@@ -8,7 +8,7 @@ import scala.util.parsing.json.JSON
 
 object VimSerializer {
 
-  private def toVimScript(input: Any): String = input match {
+  def toVimScript(input: Any): String = input match {
     case s: String => {
       "\"" + escapeStringForVim(s) + "\""
     }
@@ -38,7 +38,46 @@ object VimSerializer {
 }
 
 
-class VimHandler(moduleRegistry: ModuleRegistry) {
+abstract class VimJSONHandler(moduleRegistry: ModuleRegistry) {
+
+  // open listens to the clients and returns replies.
+  // It never returns unless you want the server to exit
+  def open()
+
+  protected def createRequestFromJson(json: String): Option[Request] = {
+    JSON.parseFull(json) match {
+      case None => None
+      case Some(map: Map[String, Any]) => {
+        // Extract information
+        val moduleIdentifierFile = map("moduleIdentifierFile").asInstanceOf[String]
+        val messageType = map("message")
+        val arguments = map("arguments").asInstanceOf[List[Any]]
+
+        // Create Message instance
+        val packageName = classOf[Module].getPackage.getName
+        val fqcn = packageName + "." + messageType
+        val clazz = classOf[Module].getClassLoader.loadClass(fqcn)
+        val constructor = clazz.getDeclaredConstructors()(0)
+        val parameterTypes = constructor.getParameterTypes
+        val params = arguments.padTo(parameterTypes.size, "")
+
+        // Type conversions, extend when necessary
+        val typedParams: List[Any] = params.zip(parameterTypes).map {e =>
+          if (e._2.equals(classOf[String])) e._1
+          else if (e._2.equals(classOf[Int])) java.lang.Double.valueOf(e._1.toString).intValue
+        }
+      
+        // Create instance
+        val m = constructor.newInstance(typedParams.asInstanceOf[List[AnyRef]]: _*).asInstanceOf[AnyRef]
+        Some(Request(moduleIdentifierFile, m))
+      }
+    }
+  }
+
+}
+
+
+class VimHandlerTCPIP(moduleRegistry: ModuleRegistry) extends VimJSONHandler(moduleRegistry) {
 
   def open() {
     val listener = new ServerSocket(9081)
@@ -88,36 +127,6 @@ class VimHandler(moduleRegistry: ModuleRegistry) {
     } finally {
       out.flush()
       socket.close()
-    }
-  }
-
-  private def createRequestFromJson(json: String): Option[Request] = {
-    JSON.parseFull(json) match {
-      case None => None
-      case Some(map: Map[String, Any]) => {
-        // Extract information
-        val moduleIdentifierFile = map("moduleIdentifierFile").asInstanceOf[String]
-        val messageType = map("message")
-        val arguments = map("arguments").asInstanceOf[List[Any]]
-
-        // Create Message instance
-        val packageName = classOf[Module].getPackage.getName
-        val fqcn = packageName + "." + messageType
-        val clazz = classOf[Module].getClassLoader.loadClass(fqcn)
-        val constructor = clazz.getDeclaredConstructors()(0)
-        val parameterTypes = constructor.getParameterTypes
-        val params = arguments.padTo(parameterTypes.size, "")
-
-        // Type conversions, extend when necessary
-        val typedParams: List[Any] = params.zip(parameterTypes).map {e =>
-          if (e._2.equals(classOf[String])) e._1
-          else if (e._2.equals(classOf[Int])) java.lang.Double.valueOf(e._1.toString).intValue
-        }
-      
-        // Create instance
-        val m = constructor.newInstance(typedParams.asInstanceOf[List[AnyRef]]: _*).asInstanceOf[AnyRef]
-        Some(Request(moduleIdentifierFile, m))
-      }
     }
   }
 
