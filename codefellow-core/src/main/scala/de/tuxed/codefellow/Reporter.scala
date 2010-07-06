@@ -34,7 +34,7 @@ class Note(val file: String, val msg: String, severity: Int, beg: Int, end: Int,
 }
 
 
-class PresentationReporter extends Reporter {
+class PresentationReporter extends Reporter with Logging {
 
   private val notes = new HashMap[SourceFile, HashSet[Note]] with SynchronizedMap[SourceFile, HashSet[Note]] {
     override def default(k : SourceFile) = { val v = new HashSet[Note] ; put(k, v); v }
@@ -54,7 +54,7 @@ class PresentationReporter extends Reporter {
   }
 
   override def info(pos: Position, msg: String, force: Boolean) {
-    println("INFO: " + msg)
+    logInfo("INFO: " + msg)
   }
 
   override def info0(pos: Position, msg: String, severity: Severity, force: Boolean): Unit = {
