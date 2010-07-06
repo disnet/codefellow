@@ -38,4 +38,3 @@ endif
 " autocmd BufReadPost *.scala call codefellow#ReloadFile()
 autocmd BufWritePost *.scala call codefellow#ReloadFile()
 
-

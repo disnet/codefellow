@@ -142,3 +142,26 @@ class VimHandlerTCPIP(moduleRegistry: ModuleRegistry) extends VimJSONHandler(mod
 
 }
 
+
+class VimHandlerStdinStdout(moduleRegistry: ModuleRegistry) extends VimJSONHandler(moduleRegistry) {
+
+  def open() {
+    println("INFO: listening on stdin")
+    val reader = new BufferedReader(new InputStreamReader(System.in))
+    while (true){
+      try {
+        val reply = handleConnectionRequest(reader)
+        println("server:"+reply)
+      } catch {
+        case e: InputClosed => {
+          println("input closed, shutting down")
+          System.exit(1)
+          "" // dummy - Scala doesn't know that exit(1) doesn't return
+        }
+      } finally {
+        println("server:ENDREPLY")
+      }
+    }
+  }
+
+}

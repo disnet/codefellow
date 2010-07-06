@@ -74,9 +74,15 @@ h2. Usage
 
 *Note:* The first invocation of a CodeFellow feature might take a couple of seconds since the compiler daemon for each module in your build will be started on demand.
 
+8. Customize connection settings. see vim/autoload/codefellow.vim
+  section "connection to server / optional server startup"
+
 9. debugging:
+  execute:
   set this in your ~/.vimrc:
   let g:codefellow_verbose = 1
+  py doDebug=True
+  also watch the logfile: g:codefellow_server_logfile
   g:codefellow_last_exception contains the text of the last received failure
 
 The following key bindings are available:

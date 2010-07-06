@@ -16,3 +16,5 @@ src_managed
 .svn
 .DS_Store
 .scala_dependencies
+
+vim/autoload/codefellow.pyc
