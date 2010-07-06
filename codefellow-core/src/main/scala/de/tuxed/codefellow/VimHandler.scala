@@ -156,7 +156,6 @@ class VimHandlerStdinStdout(moduleRegistry: ModuleRegistry) extends VimJSONHandl
         case e: InputClosed => {
           println("input closed, shutting down")
           System.exit(1)
-          "" // dummy - Scala doesn't know that exit(1) doesn't return
         }
       } finally {
         println("server:ENDREPLY")
