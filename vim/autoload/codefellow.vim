@@ -149,34 +149,34 @@ endfunction
 
 function codefellow#CompleteMember(findstart, base)
     if a:findstart
-        return <SID>getWordUnderCursorIndex()
+        return s:getWordUnderCursorIndex()
     else
         w!
         call codefellow#Echo("CodeFellow: member completion...")
-        let result = codefellow#SendMessage("CompleteMember", <SID>getFileName(), line(".") -1, col("."), a:base)
+        let result = codefellow#SendMessage("CompleteMember", s:getFileName(), line(".") -1, col("."), a:base)
         return result
     endif
 endfunction
 
 function codefellow#CompleteScope(findstart, base)
     if a:findstart
-        return <SID>getWordUnderCursorIndex()
+        return s:getWordUnderCursorIndex()
     else
         w!
         call codefellow#Echo("CodeFellow: scope completion...")
-        let result = codefellow#SendMessage("CompleteScope", <SID>getFileName(), line(".") -1, col("."), a:base)
+        let result = codefellow#SendMessage("CompleteScope", s:getFileName(), line(".") -1, col("."), a:base)
         return result
     endif
 endfunction
 
 "function codefellow#CompleteSmart(findstart, base)
     "if a:findstart
-        "return <SID>getWordUnderCursorIndex()
+        "return s:getWordUnderCursorIndex()
     "else
         "w!
         "call codefellow#Echo("CodeFellow: Please wait...")
 "
-        "let offset = <SID>getWordBeforeCursorOffset()
+        "let offset = s:getWordBeforeCursorOffset()
         "let result = codefellow#SendMessage("CompleteSmart", expand("%:p"), offset, a:base)
 "
         "let res = []
@@ -193,7 +193,7 @@ function codefellow#BalloonType()
     if bufmod == 1
         return "Save buffer to get type information"
     else
-        let result = codefellow#SendMessage("TypeInfo", <SID>getFileName(), v:beval_lnum -1, v:beval_col)
+        let result = codefellow#SendMessage("TypeInfo", s:getFileName(), v:beval_lnum -1, v:beval_col)
         return result
     endif
 endfunction
@@ -203,21 +203,21 @@ function codefellow#PrintTypeInfo()
         call codefellow#Echo("Save buffer to get type information")
     else
         " reloading of buffer is done on buf write
-        echo codefellow#SendMessage("TypeInfo", <SID>getFileName(), line(".") - 1, col("."))
+        echo codefellow#SendMessage("TypeInfo", s:getFileName(), line(".") - 1, col("."))
     endif
 endfunction
 
 function codefellow#ReloadFile()
     let s:compilerset=1
-    return codefellow#SendMessage("ReloadFile", <SID>getFileName())
+    return codefellow#SendMessage("ReloadFile", s:getFileName())
 endfunction
 
 function codefellow#CompileFile()
     silent wa!
     exec 'set efm=%f:%l:%c:%m'
-    let result = codefellow#SendMessage("CompileFile", <SID>getFileName())
+    let result = codefellow#SendMessage("CompileFile", s:getFileName())
     call setqflist(result)
-    call <SID>ShowCompilerMarkers()
+    call s:ShowCompilerMarkers()
 endfunction
 
 function codefellow#Echo(s)
