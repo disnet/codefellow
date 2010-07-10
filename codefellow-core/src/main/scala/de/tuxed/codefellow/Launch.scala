@@ -18,7 +18,14 @@ object Launch {
     while (idx < args.length){
       args(idx) match {
         case "-" => stdinout = true
+        case "--debug" =>  {
+          Logging.debugging = true
+          Logging.logDebug("debugging enabled")
+        }
         case arg => root = arg
+        case arg => {
+          Logging.logInfo("unexpected argument "+ arg)
+        }
       }
       idx += 1
     }

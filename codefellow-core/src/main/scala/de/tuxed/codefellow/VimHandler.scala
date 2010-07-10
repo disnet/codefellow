@@ -39,7 +39,7 @@ object VimSerializer {
 
 class InputClosed extends Exception
 
-abstract class VimJSONHandler(moduleRegistry: ModuleRegistry) {
+abstract class VimJSONHandler(moduleRegistry: ModuleRegistry) extends Object with Logging {
 
   // open listens to the clients and returns replies.
   // It never returns unless you want the server to exit
@@ -94,8 +94,8 @@ abstract class VimJSONHandler(moduleRegistry: ModuleRegistry) {
         }
         val request = createRequestFromJson(line)
         val reply   = moduleRegistry !? request
+        logDebug("Vim reply: "+reply)
         reply
-
       } catch {
         case e: InputClosed =>
           throw e // is handled by caller (which calls System.exit in the StdIn case)
@@ -109,31 +109,33 @@ abstract class VimJSONHandler(moduleRegistry: ModuleRegistry) {
 }
 
 
-class VimHandlerTCPIP(moduleRegistry: ModuleRegistry) extends VimJSONHandler(moduleRegistry) {
+class VimHandlerTCPIP(moduleRegistry: ModuleRegistry)
+  extends VimJSONHandler(moduleRegistry)
+{
 
   def open() {
     val port = 9081
     val listener = new ServerSocket(port)
-    println("INFO: listening on TCP/IP port "+port)
+    logInfo("listening on TCP/IP port "+port)
     while (true) {
       try {
         val socket = listener.accept()
-        // println("VimHandler: Connection start")
+        logInfo("VimHandler: Connection start")
         val reader = new BufferedReader(new InputStreamReader(socket.getInputStream()))
 	val out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()))
 
         out.write(handleConnectionRequest(new BufferedReader(reader)))
         out.flush()
         socket.close()
-        // println("VimHandler: Connection end")
+        logInfo("VimHandler: Connection end")
       }
       catch {
         case e: InputClosed =>
         {
-          System.err.println("client disconnected unexpectedly")
+          logError("client disconnected unexpectedly")
         }
         case e: IOException => {
-          System.err.println("Error in server listen loop: " + e)
+          logError("Error in server listen loop: " + e)
         }
       }
     }
@@ -143,10 +145,12 @@ class VimHandlerTCPIP(moduleRegistry: ModuleRegistry) extends VimJSONHandler(mod
 }
 
 
-class VimHandlerStdinStdout(moduleRegistry: ModuleRegistry) extends VimJSONHandler(moduleRegistry) {
+class VimHandlerStdinStdout(moduleRegistry: ModuleRegistry)
+	extends VimJSONHandler(moduleRegistry)
+{
 
   def open() {
-    println("INFO: listening on stdin")
+    logInfo("INFO: listening on stdin")
     val reader = new BufferedReader(new InputStreamReader(System.in))
     while (true){
       try {
@@ -154,7 +158,7 @@ class VimHandlerStdinStdout(moduleRegistry: ModuleRegistry) extends VimJSONHandl
         println("server:"+reply)
       } catch {
         case e: InputClosed => {
-          println("input closed, shutting down")
+          logInfo("input closed, shutting down")
           System.exit(1)
         }
       } finally {

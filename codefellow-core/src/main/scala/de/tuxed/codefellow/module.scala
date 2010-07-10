@@ -168,13 +168,16 @@ class Module(val name: String, val path: String, scalaSourceDirs: Seq[String], c
 
 case class CompletionEntry(name: String, signature: String, viaImport: String)
 
-class InteractiveCompiler(settings: Settings, reporter: PresentationReporter) extends Global(settings, reporter) {
+class InteractiveCompiler(settings: Settings, reporter: PresentationReporter)
+  extends Global(settings, reporter)
+  with Logging
+{
 
   var active = false
 
   def blockWhileActive() {
     while (active) {
-      //println("BLOCKING compiler is active")
+      logDebug("BLOCKING compiler is active")
       Thread.sleep(10)
     }
   }
@@ -183,7 +186,7 @@ class InteractiveCompiler(settings: Settings, reporter: PresentationReporter) ex
     active = true
     val x = new Response[Unit]
     askReload(files.map(f => getSourceFile(f)), x)
-    //println(x.get)
+    // logDebug(x.get)
   }
 
   def compileFiles(currentFile: String, files: List[String]): List[Map[String, Any]] = {
@@ -277,7 +280,7 @@ class InteractiveCompiler(settings: Settings, reporter: PresentationReporter) ex
 
   private def typeOfTree(t:Tree): String = {
     var tree = t
-    //println("Class of tree: " + tree.getClass)
+    logDebug("Class of tree: " + tree.getClass)
     tree = tree match {
       case Select(qual, name) if tree.tpe == ErrorType => qual
       case t: ImplDef if t.impl != null => t.impl
@@ -293,15 +296,16 @@ class InteractiveCompiler(settings: Settings, reporter: PresentationReporter) ex
   }
 
    override def recompile(units: List[RichCompilationUnit]) {
-    println("Compiling: " + units)
+    logDebug("Compiling: " + units)
     try {
       active = true
       super.recompile(units)
     } catch {
       case e: Throwable =>
-        println("Error while compiling: " + e)
+        logError("Error while compiling: " + e)
+        throw e
     } finally {
-      println("Compiler done")
+      logInfo("Compiler done")
       active = false
     }
   }
