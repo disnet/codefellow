@@ -14,7 +14,7 @@ object Launch {
     val modules = findAllModules(root)
     val moduleRegistry = new ModuleRegistry(modules)
     moduleRegistry.start()
-    val vimHandler = new VimHandler(moduleRegistry)
+    val vimHandler = new VimHandlerTCPIP(moduleRegistry)
     vimHandler.open()
   }
 
