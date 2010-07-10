@@ -1,22 +1,8 @@
 
 package de.tuxed.codefellow
 
-import java.io.File
-
 import scala.actors._
 import scala.actors.Actor._
-import scala.actors.remote.RemoteActor
-
-import scala.collection.mutable.ListBuffer
-
-import scala.tools.nsc.interactive.{Global, CompilerControl}
-import scala.tools.nsc.{Settings, FatalError}
-import scala.tools.nsc.reporters.{Reporter, ConsoleReporter}
-import scala.tools.nsc.util.{ClassPath, MergedClassPath, SourceFile, Position, OffsetPosition, NoPosition}
-import scala.collection.mutable.{ HashMap, HashEntry, HashSet }
-import scala.collection.mutable.{ ArrayBuffer, SynchronizedMap,LinkedHashMap }
-import scala.tools.nsc.symtab.Types
-import scala.tools.nsc.symtab.Flags
 
 
 case class Request(moduleIdentifierFile: String, message: AnyRef)
@@ -32,12 +18,9 @@ class ModuleRegistry(modules: List[Module]) extends Actor {
       try {
         receive {
           case Request(moduleIdentifierFile, message) => {
-            val selected = modules.filter(m => moduleIdentifierFile.startsWith(m.path))
-            if (selected.size != 0) {
-              val result = selected(0) !? message
-              sender ! Right(result)
-            } else {
-              throw new Exception("File [" + moduleIdentifierFile + "] not part of the current project!")
+            modules.find { m => moduleIdentifierFile.startsWith(m.path) } match {
+              case None => Left("File [" + moduleIdentifierFile + "] not part of the current project!")
+              case Some(m) => sender ! Right(m !? message)
             }
           }
         }
@@ -49,6 +32,6 @@ class ModuleRegistry(modules: List[Module]) extends Actor {
       }
     }
   }
-  
+
 }
 
