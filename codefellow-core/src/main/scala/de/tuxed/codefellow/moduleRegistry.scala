@@ -3,6 +3,8 @@ package de.tuxed.codefellow
 
 import scala.actors._
 import scala.actors.Actor._
+import scala.actors.remote.RemoteActor
+import scala.collection.mutable.ListBuffer
 
 
 case class Request(moduleIdentifierFile: String, message: AnyRef)
@@ -34,4 +36,3 @@ class ModuleRegistry(modules: List[Module]) extends Actor {
   }
 
 }
-

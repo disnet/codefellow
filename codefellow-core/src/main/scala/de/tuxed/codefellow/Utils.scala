@@ -11,10 +11,10 @@ object Utils {
     if (f.listFiles != null) {
       handler(f)
 
-      for (entry <- f.listFiles) {
-        if (entry.isDirectory && dirFilter(entry)) {
-          traverseDirectory(entry.getAbsolutePath, dirFilter, handler)
-        }
+      for ( entry <- f.listFiles
+            if (entry.isDirectory && dirFilter(entry))
+          ) {
+        traverseDirectory(entry.getAbsolutePath, dirFilter, handler)
       }
     }
   }
