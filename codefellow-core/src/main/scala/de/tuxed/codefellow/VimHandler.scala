@@ -6,6 +6,37 @@ import java.net._
 
 import scala.util.parsing.json.JSON
 
+object VimSerializer {
+
+  private def toVimScript(input: Any): String = input match {
+    case s: String => {
+      "\"" + escapeStringForVim(s) + "\""
+    }
+    case i: Int => {
+      i.toString
+    }
+    case d: Double => {
+      d.toString
+    }
+    case l: List[Any] => {
+      "[" + (l map { toVimScript } mkString ",") + "]"
+    }
+    case m: Map[Any, Any] => {
+      "{" + (m map { case (k, v) => toVimScript(k) + ":" + toVimScript(v) } mkString ",") + "}"
+    }
+    case Left(l) => toVimScript(Map("left" -> l))
+    case Right(l) => toVimScript(Map("right" -> l))
+  }
+
+  private def escapeStringForVim(string: String): String = {
+    string
+      .replace("\\", "\\\\")
+      .replace("\"", "\\\"")
+      .replace("\n", "\\n")
+  }
+
+}
+
 
 class VimHandler(moduleRegistry: ModuleRegistry) {
 
@@ -44,7 +75,7 @@ class VimHandler(moduleRegistry: ModuleRegistry) {
         case None => throw new RuntimeException("Request could not be parsed:" + line)
         case Some(request) => {
           val result = moduleRegistry !? request
-          val forVim = toVimScript(result)
+          val forVim = VimSerializer.toVimScript(result)
           //println("VimHandler: Response >>>" + forVim + "<<<")
           out.write(forVim)
         }
@@ -88,31 +119,6 @@ class VimHandler(moduleRegistry: ModuleRegistry) {
         Some(Request(moduleIdentifierFile, m))
       }
     }
-  }
-
-  private def toVimScript(input: Any): String = input match {
-    case s: String => {
-      "\"" + escapeStringForVim(s) + "\""
-    }
-    case i: Int => {
-      i.toString
-    }
-    case d: Double => {
-      d.toString
-    }
-    case l: List[Any] => {
-      "[" + (l map { toVimScript } mkString ",") + "]"
-    }
-    case m: Map[Any, Any] => {
-      "{" + (m map { case (k, v) => toVimScript(k) + ":" + toVimScript(v) } mkString ",") + "}"
-    }
-  }
-
-  private def escapeStringForVim(string: String): String = {
-    string
-      .replace("\\", "\\\\")
-      .replace("\"", "\\\"")
-      .replace("\n", "\\n")
   }
 
 }
