@@ -15,17 +15,14 @@ object Launch {
     var root = "."
 
     // minimalistic option parser - I don't want to add a dependency
-    while (idx < args.length){
+    while (idx < args.length) {
       args(idx) match {
         case "-" => stdinout = true
-        case "--debug" =>  {
+        case "--debug" => {
           Logging.debugging = true
           Logging.logDebug("debugging enabled")
         }
         case arg => root = arg
-        case arg => {
-          Logging.logInfo("unexpected argument "+ arg)
-        }
       }
       idx += 1
     }
@@ -34,10 +31,11 @@ object Launch {
     val moduleRegistry = new ModuleRegistry(modules)
     moduleRegistry.start()
 
-    (stdinout match {
+    val handler = stdinout match {
       case true => new VimHandlerStdinStdout(moduleRegistry)
       case false => new VimHandlerTCPIP(moduleRegistry)
-    }).open()
+    }
+    handler.open()
   }
 
   def findAllModules(rootPath: String): List[Module] = {
