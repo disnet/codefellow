@@ -10,12 +10,27 @@ import scala.collection.mutable.ListBuffer
 object Launch {
 
   def main(args: Array[String]) {
-    val root = if (args.size > 0) args(0) else "."
+    var idx = 0
+    var stdinout = false
+    var root = "."
+
+    // minimalistic option parser - I don't want to add a dependency
+    while (idx < args.length){
+      args(idx) match {
+        case "-" => stdinout = true
+        case arg => root = arg
+      }
+      idx += 1
+    }
+
     val modules = findAllModules(root)
     val moduleRegistry = new ModuleRegistry(modules)
     moduleRegistry.start()
-    val vimHandler = new VimHandlerTCPIP(moduleRegistry)
-    vimHandler.open()
+
+    (stdinout match {
+      case true => new VimHandlerStdinStdout(moduleRegistry)
+      case false => new VimHandlerTCPIP(moduleRegistry)
+    }).open()
   }
 
   def findAllModules(rootPath: String): List[Module] = {

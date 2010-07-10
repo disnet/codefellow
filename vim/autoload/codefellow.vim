@@ -1,41 +1,103 @@
+
+" {{{1 connection to server / optional server startup
+"
+" connection string: "socket\nport/auto[\ncommand]"
+"                or: "stdin\ncommand"
+" socket:
+"   if command is given the server will be started automatically
+"   if port is set to auto the port will be read from a file which is written
+"   by the server (not yet implemented)
+"
+" stdin:
+"   Vim always starts the server and connects to its stdin/out
+"
+" command must be a list. See example below
+"
+" Example:
+" 
+" let p = 'xx'
+" let g:codefellow_connection_setting = "stdin\n['java','-cp','"
+"   \ .p."/project/boot/scala-2.8.0.RC5/lib/scala-library.jar:"
+"   \ .p."/project/boot/scala-2.8.0.RC5/lib/scala-compiler.jar:"
+"   \ .p."/codefellow-core/target/scala_2.8.0.RC5/classes', 'de.tuxed.codefellow.Launch']"
+"
+"  de.tuxed.codefellow.Launch
+let s:self=expand('<sfile>:h')
+
+function s:SetupPython() abort
+
+  if exists('g:codefellow_python_setup')
+    return 
+  endif
+
+  let g:codefellow_python_setup = 1
+  let g:codefellow_python_setup_success = 0
+
+  if !has('python')
+    throw "python support required to talk to codefellow server!"
+  endif
+
+  if input('connect to codefellow server ? [y/n]:','') != 'y'
+    return
+  endif
+
+  exec 'pyfile '.s:self.'/codefellow.py'
+
+  " default: user must start server
+  if !exists('g:codefellow_connection_setting')
+    g:codefellow_connection_setting = "socket\n9081"
+  endif
+
+  " create connection object:
+  let parts = split(g:codefellow_connection_setting,"\n")
+  if parts[0] == 'socket'
+
+    let start_server = len(parts) > 2
+    if start_server
+      let g:codefellow_server_cmd = eval(parts[2])
+    endif
+    exec 'py codefellow_connection_object = SocketConnection(vim.eval("parts[1]"),vim.eval("start_server"))'
+
+  elseif parts[0] == 'stdin'
+
+    let g:codefellow_server_cmd = eval(parts[1])
+    exec 'py codefellow_connection_object = StdinOutConnection()'
+
+  else
+    throw "can't handle connection setting!"
+  endif
+
+  let g:codefellow_python_setup_success = 1
+
+endfunction
+
 "
 " Sends a message to the CodeFellow server a return the response
 "
-function s:SendMessage(type, ...)
-python << endpython
-import socket
-import vim
-try:
-    s = socket.socket()
-    s.connect(("localhost", 9081))
+function codefellow#SendMessage(type, ...)
 
-    argsSize = int(vim.eval("a:0"))
-    args = []
-    for i in range(1, argsSize + 1):
-        args.append(vim.eval("a:" + str(i)))
+  call s:SetupPython()
 
-    # if there is a case where you need proper quoting consider using 
-    # http://github.com/MarcWeber/scion-backend-vim/blob/devel-vim/autoload/json.vim
-    msg = "{"
-    msg += '"moduleIdentifierFile": "' + vim.eval('expand("%:p")') + '",'
-    msg += '"message": "' + vim.eval("a:type") + '",'
-    msg += '"arguments": [' + ",".join(map(lambda e: '"' + e + '"', args)) + ']'
-    msg += "}"
-    msg += "\nENDREQUEST\n"
-    s.sendall(msg)
+  if !g:codefellow_python_setup_success
+    echoe "setting up connection to server failed. :unlet g:codefellow_python_setup and retry"
+    " something went wrong (connection failure or no python ..)
+    " stay silent
+    return ""
+  endif
 
-    # read until server closes connection
-    data = ""
-    while 1:
-        tmp = s.recv(1024)
-        if not tmp:
-            break
-        data += tmp
+  let msg = codefellow_json#Encode({
+        \ 'moduleIdentifierFile': expand("%:p"),
+        \ 'message': a:type,
+        \ 'arguments': copy(a:000)
+        \ })
+        \."\nENDREQUEST\n"
 
-    vim.command("let g:codefellow_res = "+data)
-except:
-    vim.command('let g:codefellow_res =  {"left" : "Exception in Python code"}')
-endpython
+  silent! unlet g:codefellow_res
+python << EOF
+r = codefellow_connection_object.sendMessage(vim.eval("msg"))
+# r is valid serialized vim string
+vim.command("let g:codefellow_res = "+r)
+EOF
 
   if has_key(g:codefellow_res,'left')
     let exception = g:codefellow_res['left']
@@ -49,6 +111,7 @@ endpython
 
 endfunction
 
+" }}}
 
 execute "sign define codefellow_marker_error text=! linehl=ErrorMsg"
 
@@ -59,6 +122,7 @@ function s:ShowCompilerMarkers()
         execute ":sign place " . id . " line=" . a.lnum . " name=codefellow_marker_error buffer=" . a.bufnr
     endfor
 endfunction
+
 
 "
 " Returns the absolute path of the current file
@@ -87,9 +151,9 @@ function codefellow#CompleteMember(findstart, base)
     if a:findstart
         return <SID>getWordUnderCursorIndex()
     else
-        silent w!
+        w!
         call codefellow#Echo("CodeFellow: member completion...")
-        let result = <SID>SendMessage("CompleteMember", <SID>getFileName(), line(".") -1, col("."), a:base)
+        let result = codefellow#SendMessage("CompleteMember", <SID>getFileName(), line(".") -1, col("."), a:base)
         return result
     endif
 endfunction
@@ -98,9 +162,9 @@ function codefellow#CompleteScope(findstart, base)
     if a:findstart
         return <SID>getWordUnderCursorIndex()
     else
-        silent w!
+        w!
         call codefellow#Echo("CodeFellow: scope completion...")
-        let result = <SID>SendMessage("CompleteScope", <SID>getFileName(), line(".") -1, col("."), a:base)
+        let result = codefellow#SendMessage("CompleteScope", <SID>getFileName(), line(".") -1, col("."), a:base)
         return result
     endif
 endfunction
@@ -113,7 +177,7 @@ endfunction
         "call codefellow#Echo("CodeFellow: Please wait...")
 "
         "let offset = <SID>getWordBeforeCursorOffset()
-        "let result = <SID>SendMessage("CompleteSmart", expand("%:p"), offset, a:base)
+        "let result = codefellow#SendMessage("CompleteSmart", expand("%:p"), offset, a:base)
 "
         "let res = []
         "for entryLine in split(result, "\n")
@@ -129,7 +193,7 @@ function codefellow#BalloonType()
     if bufmod == 1
         return "Save buffer to get type information"
     else
-        let result = <SID>SendMessage("TypeInfo", <SID>getFileName(), v:beval_lnum -1, v:beval_col)
+        let result = codefellow#SendMessage("TypeInfo", <SID>getFileName(), v:beval_lnum -1, v:beval_col)
         return result
     endif
 endfunction
@@ -139,18 +203,19 @@ function codefellow#PrintTypeInfo()
         call codefellow#Echo("Save buffer to get type information")
     else
         " reloading of buffer is done on buf write
-        echo <SID>SendMessage("TypeInfo", <SID>getFileName(), line(".") - 1, col("."))
+        echo codefellow#SendMessage("TypeInfo", <SID>getFileName(), line(".") - 1, col("."))
     endif
 endfunction
 
 function codefellow#ReloadFile()
-    return <SID>SendMessage("ReloadFile", <SID>getFileName())
+    let s:compilerset=1
+    return codefellow#SendMessage("ReloadFile", <SID>getFileName())
 endfunction
 
 function codefellow#CompileFile()
     silent wa!
     exec 'set efm=%f:%l:%c:%m'
-    let result = <SID>SendMessage("CompileFile", tempname(), <SID>getFileName())
+    let result = codefellow#SendMessage("CompileFile", <SID>getFileName())
     call setqflist(result)
     call <SID>ShowCompilerMarkers()
 endfunction
