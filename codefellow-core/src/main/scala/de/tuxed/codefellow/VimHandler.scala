@@ -37,6 +37,7 @@ object VimSerializer {
 
 }
 
+class InputClosed extends Exception
 
 abstract class VimJSONHandler(moduleRegistry: ModuleRegistry) {
 
@@ -44,9 +45,10 @@ abstract class VimJSONHandler(moduleRegistry: ModuleRegistry) {
   // It never returns unless you want the server to exit
   def open()
 
-  protected def createRequestFromJson(json: String): Option[Request] = {
+  // throws RuntimeException if json can't be parsed
+  protected def createRequestFromJson(json: String): Request = {
     JSON.parseFull(json) match {
-      case None => None
+      case None => throw new RuntimeException("Request could not be parsed:" + json)
       case Some(map: Map[String, Any]) => {
         // Extract information
         val moduleIdentifierFile = map("moduleIdentifierFile").asInstanceOf[String]
@@ -69,7 +71,37 @@ abstract class VimJSONHandler(moduleRegistry: ModuleRegistry) {
       
         // Create instance
         val m = constructor.newInstance(typedParams.asInstanceOf[List[AnyRef]]: _*).asInstanceOf[AnyRef]
-        Some(Request(moduleIdentifierFile, m))
+        Request(moduleIdentifierFile, m)
+      }
+    }
+  }
+
+  // returns String wich is parsed by Vim
+  // String is one of
+  // { 'right': result } indicating success or
+  // { 'left': msg } passing the caught Exception to Vim
+  def handleConnectionRequest(reader: BufferedReader) = {
+    VimSerializer.toVimScript {
+      try {
+        var line = ""
+        // Read lines until ENDREQUEST
+        var tmp = ""
+        while (tmp != "ENDREQUEST") {
+          line += tmp
+          tmp = reader.readLine()
+          if (tmp == null)
+            throw new InputClosed()
+        }
+        val request = createRequestFromJson(line)
+        val reply   = moduleRegistry !? request
+        reply
+
+      } catch {
+        case e: InputClosed =>
+          throw e // is handled by caller (which calls System.exit in the StdIn case)
+        case e: Throwable => {
+          // Left("Exception: "+e+"\n"+e.getStackTraceString)
+        }
       }
     }
   }
@@ -80,54 +112,32 @@ abstract class VimJSONHandler(moduleRegistry: ModuleRegistry) {
 class VimHandlerTCPIP(moduleRegistry: ModuleRegistry) extends VimJSONHandler(moduleRegistry) {
 
   def open() {
-    val listener = new ServerSocket(9081)
+    val port = 9081
+    val listener = new ServerSocket(port)
+    println("INFO: listening on TCP/IP port "+port)
     while (true) {
       try {
         val socket = listener.accept()
-        //println("VimHandler: Connection start")
-        handleConnection(socket)
-        //println("VimHandler: Connection end")
+        // println("VimHandler: Connection start")
+        val reader = new BufferedReader(new InputStreamReader(socket.getInputStream()))
+	val out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()))
+
+        out.write(handleConnectionRequest(new BufferedReader(reader)))
+        out.flush()
+        socket.close()
+        // println("VimHandler: Connection end")
       }
       catch {
+        case e: InputClosed =>
+        {
+          System.err.println("client disconnected unexpectedly")
+        }
         case e: IOException => {
           System.err.println("Error in server listen loop: " + e)
         }
       }
     }
     listener.close()
-  }
-
-  def handleConnection(socket: Socket) {
-    val reader = new BufferedReader(new InputStreamReader(socket.getInputStream()))
-    val out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()))
-    try {
-      var line = ""
-      // Read lines until ENDREQUEST
-      var tmp = ""
-      while (tmp != "ENDREQUEST") {
-        line += tmp
-        tmp = reader.readLine()
-      }
-
-      //println("VimHandler: Request [" + line + "]")
-      createRequestFromJson(line) match {
-        case None => throw new RuntimeException("Request could not be parsed:" + line)
-        case Some(request) => {
-          val result = moduleRegistry !? request
-          val forVim = VimSerializer.toVimScript(result)
-          //println("VimHandler: Response >>>" + forVim + "<<<")
-          out.write(forVim)
-        }
-      }
-    } catch {
-      case e: Exception => {
-        e.printStackTrace()
-        out.write("Exception: " + e)
-      }
-    } finally {
-      out.flush()
-      socket.close()
-    }
   }
 
 }
