@@ -39,7 +39,7 @@ object VimSerializer {
 
 class InputClosed extends Exception
 
-abstract class VimJSONHandler(moduleRegistry: ModuleRegistry) extends Object with Logging {
+abstract class VimJSONHandler(moduleRegistry: ModuleRegistry) extends Logging {
 
   // open listens to the clients and returns replies.
   // It never returns unless you want the server to exit
