@@ -35,17 +35,16 @@ class ModuleRegistry(modules: List[Module]) extends Actor {
             val selected = modules.filter(m => moduleIdentifierFile.startsWith(m.path))
             if (selected.size != 0) {
               val result = selected(0) !? message
-              sender ! result
+              sender ! Right(result)
             } else {
-              println("File [" + moduleIdentifierFile + "] not part of the current project!")
-              sender ! List("")
+              throw new Exception("File [" + moduleIdentifierFile + "] not part of the current project!")
             }
           }
         }
       } catch {
         case e: Exception => {
           e.printStackTrace
-          sender ! List("")
+          sender ! Left("Exception :"+e.getMessage+"\n"+e.getStackTraceString)
         }
       }
     }
