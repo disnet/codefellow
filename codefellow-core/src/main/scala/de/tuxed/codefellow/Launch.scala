@@ -31,11 +31,12 @@ object Launch {
     val moduleRegistry = new ModuleRegistry(modules)
     moduleRegistry.start()
 
-    val handler = stdinout match {
-      case true => new VimHandlerStdinStdout(moduleRegistry)
-      case false => new VimHandlerTCPIP(moduleRegistry)
-    }
-    handler.open()
+    //val handler = stdinout match {
+      //case true => new VimHandlerStdinStdout(moduleRegistry)
+      //case false => new VimHandlerTCPIP(moduleRegistry)
+    //}
+    val handler = new VimHandlerTCPIP(moduleRegistry)
+    handler.listen()
   }
 
   def findAllModules(rootPath: String): List[Module] = {

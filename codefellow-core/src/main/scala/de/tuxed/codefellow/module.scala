@@ -24,7 +24,7 @@ sealed abstract class CompilerRequest()
 case object StartCompiler extends CompilerRequest
 case object Shutdown extends CompilerRequest
 
-case object ReloadAllFiles extends CompilerRequest
+case class ReloadAllFiles() extends CompilerRequest
 case class ReloadFile(file: String) extends CompilerRequest
 
 case class CompileAllFiles(currentFile: String) extends CompilerRequest
@@ -64,7 +64,7 @@ class Module(val name: String, val path: String, scalaSourceDirs: Seq[String], c
       exit('stop)
     }
 
-    case ReloadAllFiles => {
+    case ReloadAllFiles() => {
       sender ! "reloading all files"
       startCompiler()
       compiler.reloadFiles(sourceFiles)
@@ -114,7 +114,7 @@ class Module(val name: String, val path: String, scalaSourceDirs: Seq[String], c
     }
 
     case x => {
-      throw new Exception("unhandled request: "+x)
+      throw new Exception("unhandled request: " + x)
     }
 
   }
@@ -153,8 +153,8 @@ class Module(val name: String, val path: String, scalaSourceDirs: Seq[String], c
 
   private def startCompiler() {
     if (compiler == null) {
-      createSourceFilesList
-      createInteractiveCompiler
+      createSourceFilesList()
+      createInteractiveCompiler()
       //compiler.reloadFiles(sourceFiles) // TODO Need to check if this will cause problems
     }
   }
@@ -170,8 +170,7 @@ case class CompletionEntry(name: String, signature: String, viaImport: String)
 
 class InteractiveCompiler(settings: Settings, reporter: PresentationReporter)
   extends Global(settings, reporter)
-  with Logging
-{
+  with Logging {
 
   var active = false
 

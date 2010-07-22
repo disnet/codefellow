@@ -6,6 +6,7 @@ import java.net._
 
 import scala.util.parsing.json.JSON
 
+
 object VimSerializer {
 
   def toVimScript(input: Any): String = input match {
@@ -37,15 +38,10 @@ object VimSerializer {
 
 }
 
-class InputClosed extends Exception
-
 abstract class VimJSONHandler(moduleRegistry: ModuleRegistry) extends Logging {
 
-  // open listens to the clients and returns replies.
-  // It never returns unless you want the server to exit
-  def open()
+  def listen()
 
-  // throws RuntimeException if json can't be parsed
   protected def createRequestFromJson(json: String): Request = {
     JSON.parseFull(json) match {
       case None => throw new RuntimeException("Request could not be parsed:" + json)
@@ -76,32 +72,28 @@ abstract class VimJSONHandler(moduleRegistry: ModuleRegistry) extends Logging {
     }
   }
 
-  // returns String wich is parsed by Vim
-  // String is one of
-  // { 'right': result } indicating success or
-  // { 'left': msg } passing the caught Exception to Vim
+  /**
+   * Returns a String wich is parsed by Vim
+   * String is one of
+   * { 'right': result } indicating success or
+   * { 'left': error } passing the caught Exception to Vim
+   */
   def handleConnectionRequest(reader: BufferedReader) = {
     VimSerializer.toVimScript {
       try {
         var line = ""
         // Read lines until ENDREQUEST
         var tmp = ""
-        while (tmp != "ENDREQUEST") {
+        while (tmp != "ENDREQUEST" && tmp != null) {
           line += tmp
           tmp = reader.readLine()
-          if (tmp == null)
-            throw new InputClosed()
         }
         val request = createRequestFromJson(line)
-        val reply   = moduleRegistry !? request
-        logDebug("Vim reply: "+reply)
+        val reply = moduleRegistry !? request
+        logDebug("Vim reply: " + reply)
         reply
       } catch {
-        case e: InputClosed =>
-          throw e // is handled by caller (which calls System.exit in the StdIn case)
-        case e: Throwable => {
-          // Left("Exception: "+e+"\n"+e.getStackTraceString)
-        }
+        case t: Throwable => Left("Error while handling request: + t")
       }
     }
   }
@@ -109,33 +101,26 @@ abstract class VimJSONHandler(moduleRegistry: ModuleRegistry) extends Logging {
 }
 
 
-class VimHandlerTCPIP(moduleRegistry: ModuleRegistry)
-  extends VimJSONHandler(moduleRegistry)
-{
+class VimHandlerTCPIP(moduleRegistry: ModuleRegistry) extends VimJSONHandler(moduleRegistry) {
 
-  def open() {
+  def listen() {
     val port = 9081
     val listener = new ServerSocket(port)
-    logInfo("listening on TCP/IP port "+port)
+    logInfo("listening on TCP/IP port " + port)
     while (true) {
       try {
         val socket = listener.accept()
         logInfo("VimHandler: Connection start")
         val reader = new BufferedReader(new InputStreamReader(socket.getInputStream()))
-	val out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()))
-
+        val out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()))
         out.write(handleConnectionRequest(new BufferedReader(reader)))
         out.flush()
         socket.close()
         logInfo("VimHandler: Connection end")
       }
       catch {
-        case e: InputClosed =>
-        {
-          logError("client disconnected unexpectedly")
-        }
-        case e: IOException => {
-          logError("Error in server listen loop: " + e)
+        case t: Throwable => {
+          logError("Error in server listen loop: " + t)
         }
       }
     }
@@ -145,26 +130,28 @@ class VimHandlerTCPIP(moduleRegistry: ModuleRegistry)
 }
 
 
-class VimHandlerStdinStdout(moduleRegistry: ModuleRegistry)
-	extends VimJSONHandler(moduleRegistry)
-{
+// class VimHandlerStdinStdout(moduleRegistry: ModuleRegistry)
+	// extends VimJSONHandler(moduleRegistry)
+// {
+// 
+  // def open() {
+    // logInfo("INFO: listening on stdin")
+    // val reader = new BufferedReader(new InputStreamReader(System.in))
+    // while (true){
+      // try {
+        // val reply = handleConnectionRequest(reader)
+        // println("server:"+reply)
+      // } catch {
+        // case e: InputClosed => {
+          // logInfo("input closed, shutting down")
+          // System.exit(1)
+        // }
+      // } finally {
+        // println("server:ENDREPLY")
+      // }
+    // }
+  // }
+// 
+// }
 
-  def open() {
-    logInfo("INFO: listening on stdin")
-    val reader = new BufferedReader(new InputStreamReader(System.in))
-    while (true){
-      try {
-        val reply = handleConnectionRequest(reader)
-        println("server:"+reply)
-      } catch {
-        case e: InputClosed => {
-          logInfo("input closed, shutting down")
-          System.exit(1)
-        }
-      } finally {
-        println("server:ENDREPLY")
-      }
-    }
-  }
 
-}

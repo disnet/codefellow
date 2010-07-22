@@ -1,3 +1,4 @@
+
 import sys, socket, string, vim
 from subprocess import Popen, PIPE, STDOUT
 
@@ -18,22 +19,14 @@ class CodeFellowConnection():
     return open(logfile, 'w')
 
 
-class SocketConnection(CodeFellowConnection):
+class CodeFellowSocketConnection():
 
-    def __init__(self, port_or_auto, start_server):
-      self.port = port_or_auto
-      if start_server == "1":
-        # TODO: Wait until server is listening. Probably you'll get one Exception
-        log = self.logfile()
-        cmd = vim.eval('g:codefellow_server_cmd')
-        if doDebug:
-          debug("starting server, cmdline: "+(" ".join(cmd)))
-        self.process = Popen(cmd, \
-          shell = False, bufsize = 1, stdin = PIPE, stdout = log, stderr = STDOUT)
+    def __init__(self, port):
+      self.port = int(port)
 
-    def sendMessage(self,message):
+    def sendMessage(self, message):
       s = socket.socket()
-      s.connect(("localhost", int(self.port)))
+      s.connect(("localhost", self.port))
       s.sendall(message)
 
       # read until server closes connection
@@ -48,47 +41,47 @@ class SocketConnection(CodeFellowConnection):
 
 # stdin/out requires Vim to launch server
 # TODO: think about reconnect
-class StdinOutConnection(CodeFellowConnection):
-    def __init__(self):
-      log = self.logfile()
-      self.log = self.logfile()
-      cmd = vim.eval('g:codefellow_server_cmd')+["-"]
-      if doDebug:
-        debug("starting server, cmdline: "+(" ".join(cmd)))
-      self.process = Popen(cmd, \
-            shell = False, bufsize = 1, stdin = PIPE, stdout = PIPE, stderr = self.log)
-      self.sbt_o = self.process.stdout
-      self.sbt_i = self.process.stdin
-
-    def sendMessage(self, message):
-      if doDebug:
-        debug("sending msg"+ message)
-      self.sbt_i.write(message+"\n")
-      self.sbt_i.flush()
-      return self.readMessage()
-
-    def readMessage(self):
-      result = []
-      while True:
-        if doDebug:
-          debug("waiting for line")
-        line = self.sbt_o.readline()
-        if doDebug:
-          debug("got line"+line)
-
-        # removing trailing \n
-        line = line[:-1]
-
-        # only accept lines starting with server:
-        if line[0:len("server:")] != "server:":
-          if doDebug:
-            debug("suspcious line "+line)
-          self.log.write(line+"\n")
-          self.log.flush()
-          continue
-        line = line[len("server:"):]
-
-        if line == "ENDREPLY":
-          return "\n".join(result)
-
-        result.append(line)
+#class StdinOutConnection(CodeFellowConnection):
+#    def __init__(self):
+#      log = self.logfile()
+#      self.log = self.logfile()
+#      cmd = vim.eval('g:codefellow_server_cmd')+["-"]
+#      if doDebug:
+#        debug("starting server, cmdline: "+(" ".join(cmd)))
+#      self.process = Popen(cmd, \
+#            shell = False, bufsize = 1, stdin = PIPE, stdout = PIPE, stderr = self.log)
+#      self.sbt_o = self.process.stdout
+#      self.sbt_i = self.process.stdin
+#
+#    def sendMessage(self, message):
+#      if doDebug:
+#        debug("sending msg"+ message)
+#      self.sbt_i.write(message+"\n")
+#      self.sbt_i.flush()
+#      return self.readMessage()
+#
+#    def readMessage(self):
+#      result = []
+#      while True:
+#        if doDebug:
+#          debug("waiting for line")
+#        line = self.sbt_o.readline()
+#        if doDebug:
+#          debug("got line"+line)
+#
+#        # removing trailing \n
+#        line = line[:-1]
+#
+#        # only accept lines starting with server:
+#        if line[0:len("server:")] != "server:":
+#          if doDebug:
+#            debug("suspcious line "+line)
+#          self.log.write(line+"\n")
+#          self.log.flush()
+#          continue
+#        line = line[len("server:"):]
+#
+#        if line == "ENDREPLY":
+#          return "\n".join(result)
+#
+#        result.append(line)

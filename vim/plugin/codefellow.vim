@@ -4,9 +4,14 @@ if exists("loaded_codefellow")
 endif
 let loaded_codefellow=1
 
+if !has('python')
+    throw "CodeFellow requires Python support!"
+endif
+
 if !exists('g:codefellow_verbose')
   let g:codefellow_verbose = 0
 endif
+
 if !exists('g:codefellow_no_default_mappings')
   " default completion: (<c-s> will not work in console Vim !):
   autocmd FileType scala inoremap <buffer> <C-x><C-o> <C-O>:set omnifunc=codefellow#CompleteMember<CR><c-x><c-o>
@@ -18,11 +23,7 @@ if !exists('g:codefellow_no_default_mappings')
   autocmd FileType scala noremap <buffer> <C-s><C-t> <esc>:<c-u>call codefellow#PrintTypeInfo()<CR>
   autocmd FileType scala noremap <buffer> <F1> :call codefellow#PrintTypeInfo()<CR>
 
-  " If current file is a SBT project always map F9
-  let ft_only  = isdirectory('project/build') 
-        \ ? ["",""]
-        \ : ['autocmd FileType scala','<buffer>']
-  exec ft_only[0]' noremap '.ft_only[1].' <F9> :call codefellow#CompileFile()<CR>'
+  autocmd FileType scala noremap <buffer> <F9> :call codefellow#CompileFile()<CR>
 endif
 
 command CodefellowCompileAll call codefellow#CompileFile()
@@ -35,6 +36,6 @@ if has("balloon_eval")
 endif
 
 " Hooks to sync Vim with CodeFellow daemon
-" autocmd BufReadPost *.scala call codefellow#ReloadFile()
+autocmd BufReadPost *.scala call codefellow#ReloadFile()
 autocmd BufWritePost *.scala call codefellow#ReloadFile()
 

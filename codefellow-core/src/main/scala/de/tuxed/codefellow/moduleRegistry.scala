@@ -28,8 +28,8 @@ class ModuleRegistry(modules: List[Module]) extends Actor {
         }
       } catch {
         case e: Exception => {
-          e.printStackTrace
-          sender ! Left("Exception :"+e.getMessage+"\n"+e.getStackTraceString)
+          e.printStackTrace()
+          sender ! Left("Exception : " + e.getMessage + "\n" + e.getStackTraceString)
         }
       }
     }

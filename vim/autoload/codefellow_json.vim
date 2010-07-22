@@ -6,13 +6,13 @@
 " dummy type which is used to encode "null"
 " same could be done for true / false. But we don't use those yet
 fun! codefellow_json#NULL()
-  return function("json#NULL")
+  return function("codefellow_json#NULL")
 endf
 fun! codefellow_json#True()
-  return function("json#True")
+  return function("codefellow_json#True")
 endf
 fun! codefellow_json#False()
-  return function("json#False")
+  return function("codefellow_json#False")
 endf
 fun! codefellow_json#IntToBool(i)
   return  a:i == 1 ? json#True() : json#False()
@@ -24,24 +24,23 @@ fun! codefellow_json#Encode(thing)
   elseif type(a:thing) == type({})
     let pairs = []
     for [Key, Value] in items(a:thing)
-      call add(pairs, json#Encode(Key).':'.json#Encode(Value))
+      call add(pairs, codefellow_json#Encode(Key).':'.codefellow_json#Encode(Value))
       unlet Key | unlet Value
     endfor
     return "{".join(pairs, ",")."}"
   elseif type(a:thing) == type(0)
     return a:thing
   elseif type(a:thing) == type([])
-    return '['.join(map(a:thing, "json#Encode(v:val)"),",").']'
+    return '['.join(map(a:thing, "codefellow_json#Encode(v:val)"),",").']'
     return 
-  elseif string(a:thing) == string(json#NULL())
+  elseif string(a:thing) == string(codefellow_json#NULL())
     return "null"
-  elseif string(a:thing) == string(json#True())
+  elseif string(a:thing) == string(codefellow_json#True())
     return "true"
-  elseif string(a:thing) == string(json#False())
+  elseif string(a:thing) == string(codefellow_json#False())
     return "false"
   else
     throw "unexpected new thing: ".string(a:thing)
   endif
 endf
 
-" usage example: echo json#Encode({'method': 'connection-info', 'id': 0, 'params': [3]})
